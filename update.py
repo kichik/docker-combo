@@ -1,9 +1,10 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 
 import argparse
 import json
 import io
 import logging
+import os
 import sys
 import time
 
@@ -21,6 +22,7 @@ def parse_cmdline():
         return value
 
     parser = argparse.ArgumentParser()
+    parser.add_argument('--push', action='store_true')
     parser.add_argument('images', metavar='IMAGE', type=check_docker_tag, nargs=2)
     return parser.parse_args()
 
@@ -141,6 +143,10 @@ def main():
 
     for line in build_stream:
         logging.info('%s', json.loads(line.decode('utf-8'))['stream'].strip('\n'))
+
+    if args.push:
+        docker_client.login(os.getenv('DOCKER_USERNAME'), os.getenv('DOCKER_PASSWORD'))
+        docker_client.push('%s/%s' % (combo_image.user, combo_image.repo), combo_image.tag)
 
     return 0
 

@@ -1,4 +1,4 @@
-language: python3
+language: python
 python:
 - "3.6"
 os:
@@ -7,9 +7,9 @@ sudo: required
 services:
   - docker
 install:
-- sudo python3 -m pip install -r requirements.txt
+- sudo pip install -r requirements.txt
 script:
-- ./update.py $I1 $I2
+- ./update.py `[ $TRAVIS_BRANCH == master ] && echo --push` $I1 $I2
 env:
 - "I1=python:2 I2=node:6"
 - "I1=python:2 I2=node:8"
