@@ -100,6 +100,12 @@ class DockerImage(object):
         raise DockerImageError('Unable to find Dockerfile in %s' % url)
 
 
+def get_from_line(dockerfile):
+    for line in dockerfile.splitlines():
+        if line.strip().startswith('FROM'):
+            return line
+
+
 def should_rebuild(combo_image, image1, image2):
     try:
         combo_image_time = combo_image.build_time
@@ -137,7 +143,7 @@ def main():
     image1 = DockerImage(args.images[0])
     image2 = DockerImage(args.images[1])
 
-    if image1.dockerfile.splitlines()[0] != image2.dockerfile.splitlines()[0]:
+    if get_from_line(image1.dockerfile) != get_from_line(image2.dockerfile):
         logging.error('%s and %s do not use the same FROM line', image1.image, image2.image)
         return 1
 
