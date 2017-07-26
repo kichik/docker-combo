@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
 import argparse
-import json
 import io
+import json
 import logging
 import os
 import sys
@@ -10,6 +10,7 @@ import time
 
 import bs4
 import docker
+import docker.errors
 import requests
 
 docker_client = docker.from_env()
@@ -58,15 +59,20 @@ class DockerImage(object):
 
         # TODO get details without pulling
         logging.info('Pulling %s', self.image)
-        docker_client.pull(self.image)
+
+        try:
+            docker_client.pull(self.image)
+        except docker.errors.NotFound:
+            raise DockerImageError('%s not found', self.image)
+
         for i in docker_client.images():
             if self.image in i['RepoTags']:
                 self._build_time = i['Created']
                 built_time_str = time.ctime(self._build_time)
                 logging.info('%s was last built on %s (%d)', self.image, built_time_str, self._build_time)
                 return self._build_time
-        else:
-            raise DockerImageError('Error pulling %s', self.image)
+
+        raise DockerImageError('Error pulling %s', self.image)
 
     @property
     def dockerfile(self):
