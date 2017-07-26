@@ -125,6 +125,12 @@ def combine_dockerfiles(dockerfile1, dockerfile2):
     return '\n'.join(l for l in lines1 + lines2[1:] if not l.startswith('CMD ') or l.startswith('ENTRYPOINT '))
 
 
+def log_stream(stream):
+    for line in stream:
+        line = json.loads(line.decode('utf-8'))
+        logging.info('%s', line.get('stream', str(line)).strip('\n'))
+
+
 def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(levelname)s %(message)s')
     args = parse_cmdline()
@@ -146,13 +152,12 @@ def main():
         fileobj=io.BytesIO(combine_dockerfiles(image1.dockerfile, image2.dockerfile).encode('utf-8')),
         tag=combo_image.image
     )
-
-    for line in build_stream:
-        logging.info('%s', json.loads(line.decode('utf-8'))['stream'].strip('\n'))
+    log_stream(build_stream)
 
     if args.push:
         docker_client.login(os.getenv('DOCKER_USERNAME'), os.getenv('DOCKER_PASSWORD'))
-        docker_client.push('%s/%s' % (combo_image.user, combo_image.repo), combo_image.tag)
+        push_stream = docker_client.push('%s/%s' % (combo_image.user, combo_image.repo), combo_image.tag, stream=True)
+        log_stream(push_stream)
 
     return 0
 
