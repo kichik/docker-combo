@@ -13,3 +13,5 @@ script:
 env:
 - "I1=python:2 I2=node:6"
 - "I1=python:2 I2=node:8"
+- "I1=python:3 I2=node:6"
+- "I1=python:3 I2=node:8"
