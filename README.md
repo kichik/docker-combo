@@ -20,7 +20,7 @@ The generated combo images are:
 
 ## Why is this needed?
 
-Complex projects sometimes require more than one language to run. Examples include Serverless with Python runtime, or Django with Yuglify.
+Complex projects sometimes require more than one language to run. Examples include Serverless with Python runtime, or Django with Yuglify. Current solutions are to build the combined image yourself which slows the build process, or using a one-off outdated image from Docker Hub created by someone who was in a similar situation a few months ago.
 
 ## How does it work?
 
