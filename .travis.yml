@@ -10,7 +10,6 @@ install:
 - sudo pip install -r requirements.txt
 script:
 - ./update.py $COMBO
-matrix:
-  env:
-  - "COMBO=python:2 node:6"
-  - "COMBO=python:2 node:8"
+env:
+- "COMBO=python:2 node:6"
+- "COMBO=python:2 node:8"
