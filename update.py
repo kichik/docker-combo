@@ -97,7 +97,7 @@ class DockerImage(object):
                 self._dockerfile = docekrfile_req.text
                 return docekrfile_req.text
 
-        raise DockerImageError('Unable to find Dockerfile in %s' % url)
+        raise DockerImageError('Unable to find Dockerfile for %s in %s' % (self.tag, url))
 
 
 def get_from_line(dockerfile):
