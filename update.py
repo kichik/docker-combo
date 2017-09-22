@@ -93,7 +93,7 @@ class DockerImage(object):
                 dockerfile_url = node.parent.parent.get('href')
             
             if node.parent.name == 'code' and node.parent.parent.name == 'li':
-                dockerfile_urls = [a.get('href') for a in node.parent.find_all('a')]
+                dockerfile_urls = [a.get('href') for a in node.parent.parent.find_all('a')]
                 dockerfile_urls = [u for u in dockerfile_urls if 'windowsservercore' not in u]
                 if len(dockerfile_urls) == 1:
                     dockerfile_url = dockerfile_urls[0]
