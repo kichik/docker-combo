@@ -87,9 +87,19 @@ class DockerImage(object):
 
         soup = bs4.BeautifulSoup(hub_req.text, 'html.parser')
         for node in soup(text=self.tag):
+            dockerfile_url = None
+            
             if node.parent.name == 'code' and node.parent.parent.name == 'a':
-                dockerfile_url = node.parent.parent.get('href') \
-                    .replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/')
+                dockerfile_url = node.parent.parent.get('href')
+            
+            if node.parent.name == 'code' and node.parent.parent.name == 'li':
+                dockerfile_urls = [a.get('href') for a in node.parent.find_all('a')]
+                dockerfile_urls = [u for u in dockerfile_urls if 'windowsservercore' not in u]
+                if len(dockerfile_urls) == 1:
+                    dockerfile_url = dockerfile_urls[0]
+                    
+            if dockerfile_url:
+                dockerfile_url = dockerfile_url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/')
                 docekrfile_req = requests.get(dockerfile_url)
                 if docekrfile_req.status_code != 200:
                     raise DockerImageError('Error downloading Dockerfile (%s)' % dockerfile_url)
