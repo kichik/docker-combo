@@ -4,6 +4,13 @@
 
 Automatically generated and up-to-date Docker combo images of useful official images like Python and Node.
 
+```
+$ docker run combos/python_node:3_8 python --version
+Python 3.6.2
+$ docker run combos/python_node:3_8 node --version
+v8.6.0
+```
+
 The generated combo images are:
 
 * Always up-to-date
