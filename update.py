@@ -99,8 +99,7 @@ class DockerImage(object):
                     dockerfile_url = dockerfile_urls[0]
 
             if dockerfile_url:
-                dockerfile_url = dockerfile_url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/',
-                                                                                                           '/')
+                dockerfile_url = dockerfile_url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/')
                 docekrfile_req = requests.get(dockerfile_url)
                 if docekrfile_req.status_code != 200:
                     raise DockerImageError('Error downloading Dockerfile (%s)' % dockerfile_url)
