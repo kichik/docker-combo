@@ -88,18 +88,19 @@ class DockerImage(object):
         soup = bs4.BeautifulSoup(hub_req.text, 'html.parser')
         for node in soup(text=self.tag):
             dockerfile_url = None
-            
+
             if node.parent.name == 'code' and node.parent.parent.name == 'a':
                 dockerfile_url = node.parent.parent.get('href')
-            
+
             if node.parent.name == 'code' and node.parent.parent.name == 'li':
                 dockerfile_urls = [a.get('href') for a in node.parent.parent.find_all('a')]
                 dockerfile_urls = [u for u in dockerfile_urls if 'windowsservercore' not in u]
                 if len(dockerfile_urls) == 1:
                     dockerfile_url = dockerfile_urls[0]
-                    
+
             if dockerfile_url:
-                dockerfile_url = dockerfile_url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/')
+                dockerfile_url = dockerfile_url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/',
+                                                                                                           '/')
                 docekrfile_req = requests.get(dockerfile_url)
                 if docekrfile_req.status_code != 200:
                     raise DockerImageError('Error downloading Dockerfile (%s)' % dockerfile_url)
@@ -114,6 +115,23 @@ def get_from_line(dockerfile):
     for line in dockerfile.splitlines():
         if line.strip().startswith('FROM'):
             return line
+
+
+def is_compatible_from_lines(dockerfile1, dockerfile2):
+    from_line1 = get_from_line(dockerfile1)
+    from_line2 = get_from_line(dockerfile2)
+    if from_line1 == from_line2:
+        return True
+
+    base1 = from_line1.split(' ')[-1].split(':')[0]
+    base2 = from_line2.split(' ')[-1].split(':')[0]
+    if base1 == base2 == 'buildpack-deps':
+        logging.info('Both using FROM buildpack-deps (%s, %s) which are different versions but still compatible',
+                     from_line1, from_line2)
+        return True
+
+    logging.info('%s != %s', from_line1, from_line2)
+    return False
 
 
 def should_rebuild(combo_image, image1, image2):
@@ -153,7 +171,7 @@ def main():
     image1 = DockerImage(args.images[0])
     image2 = DockerImage(args.images[1])
 
-    if get_from_line(image1.dockerfile) != get_from_line(image2.dockerfile):
+    if not is_compatible_from_lines(image1.dockerfile, image2.dockerfile):
         logging.error('%s and %s do not use the same FROM line', image1.image, image2.image)
         return 1
 
