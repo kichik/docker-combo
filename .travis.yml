@@ -28,4 +28,4 @@ env:
 - "I1=ruby:2.4 I2=node:6"
 - "I1=ruby:2.4 I2=node:8"
 - "I1=ruby:2.4 I2=node:9"
-- "I1=ruby:2.4 I2=node:19"
+- "I1=ruby:2.4 I2=node:10"
