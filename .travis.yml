@@ -9,7 +9,7 @@ services:
 install:
 - sudo pip install -r requirements.txt
 script:
-- ./update.py `[ $TRAVIS_BRANCH == master ] && echo --push` $I1 $I2
+- travis_retry ./update.py `[ $TRAVIS_BRANCH == master ] && echo --push` $I1 $I2
 env:
 - "I1=python:2 I2=node:6"
 - "I1=python:2 I2=node:8"
