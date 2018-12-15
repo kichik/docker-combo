@@ -11,6 +11,7 @@ import time
 import bs4
 import docker
 import docker.errors
+import markdown
 import requests
 
 docker_client = docker.from_env()
@@ -80,12 +81,17 @@ class DockerImage(object):
             return self._dockerfile
 
         # TODO there must be a better way...
-        url = 'https://hub.docker.com/%s/%s/' % (self.user, self.repo)
+        if self.user != '_':
+            raise DockerImageError('Unable to pull Dockerfile from non-product image on new hub')
+
+        url = 'https://hub.docker.com/api/content/v1/products/images/%s' % (self.repo, )
         hub_req = requests.get(url)
         if hub_req.status_code != 200:
             raise DockerImageError('Error connecting to hub (%s)' % hub_req.text)
 
-        soup = bs4.BeautifulSoup(hub_req.text, 'html.parser')
+        description = hub_req.json().get('full_description', '')
+        description_html = markdown.markdown(description)
+        soup = bs4.BeautifulSoup(description_html, 'html.parser')
         for node in soup(text=self.tag):
             dockerfile_url = None
 
