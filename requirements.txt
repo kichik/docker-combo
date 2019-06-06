@@ -1,5 +1,5 @@
-docker-py==1.10.6
-requests==2.21.0
-requests[security]==2.21.0
+docker==4.0.1
+requests==2.22.0
+requests[security]==2.22.0
 beautifulsoup4==4.6.0
 Markdown==3.0.1

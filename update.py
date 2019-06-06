@@ -14,7 +14,7 @@ import docker.errors
 import markdown
 import requests
 
-docker_client = docker.from_env()
+docker_client: docker.APIClient = docker.from_env().api
 
 
 def parse_cmdline():
@@ -165,9 +165,11 @@ def combine_dockerfiles(dockerfile1, dockerfile2):
 
 
 def log_stream(stream):
-    for line in stream:
-        line = json.loads(line.decode('utf-8'))
-        logging.info('%s', line.get('stream', str(line)).strip('\n'))
+    for lines in stream:
+        for line in lines.decode('utf-8').strip().split('\n'):
+            if line.get('errorDetail'):
+                raise RuntimeError(line['errorDetail'].get('message', str(line)))
+            logging.info('%s', line.get('stream', str(line)).strip('\n'))
 
 
 def main():
