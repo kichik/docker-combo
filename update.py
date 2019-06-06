@@ -69,18 +69,13 @@ class DockerImage(object):
         logging.info('Pulling %s', self.image)
 
         try:
-            docker_client.pull(self.image)
+            image = docker_hl_client.images.pull(self.image)
         except docker.errors.NotFound:
             raise DockerImageError('%s not found', self.image)
 
-        for i in docker_client.images():
-            if self.image in i['RepoTags']:
-                self._build_time = i['Created']
-                built_time_str = time.ctime(self._build_time)
-                logging.info('%s was last built on %s (%d)', self.image, built_time_str, self._build_time)
-                return self._build_time
-
-        raise DockerImageError('Error pulling %s', self.image)
+        self._build_time = image.attrs['Created']
+        logging.info('%s was last built on %s', self.image, self._build_time)
+        return self._build_time
 
     @property
     def dockerfile(self):
@@ -150,7 +145,8 @@ def should_rebuild(combo_image, image1, image2):
     try:
         combo_image_time = combo_image.build_time
     except DockerImageError:
-        combo_image_time = 0
+        logging.info('Combo image not built yet')
+        combo_image_time = ''
 
     image1_time = image1.build_time
     image2_time = image2.build_time
