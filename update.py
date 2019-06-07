@@ -245,6 +245,15 @@ def main():
         push_stream = docker_client.push('%s/%s' % (combo_image.user, combo_image.repo), combo_image.tag, stream=True)
         log_stream(push_stream)
 
+    logging.info('Testing image...')
+
+    logging.info('%s --version: %s',
+                 image1.repo,
+                 docker_hl_client.containers.run(combo_image.image, [image1.repo, "--version"]).decode('utf-8').strip())
+    logging.info('%s --version: %s',
+                 image2.repo,
+                 docker_hl_client.containers.run(combo_image.image, [image2.repo, "--version"]).decode('utf-8').strip())
+
     return 0
 
 
