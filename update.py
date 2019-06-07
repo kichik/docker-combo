@@ -7,8 +7,6 @@ import logging
 import os
 import re
 import sys
-import tarfile
-import time
 
 import bs4
 import docker
@@ -169,24 +167,23 @@ def log_stream(stream):
             logging.info('%s', line.get('stream', str(line)).strip('\n'))
 
 
-class BuildContext(object):
+class DockerfileBuilder(object):
     def __init__(self):
-        self.context_bytes = io.BytesIO()
-        self.context = tarfile.TarFile(fileobj=self.context_bytes, mode='w')
-        self.file_id = 0
         self.dockerfile = ''
         self.first = True
-        self.saw_from = False
 
     def add_image(self, image):
+        saw_from = False
+
         for line in image.dockerfile.splitlines():
             line = line.strip()
             if line.upper().startswith('FROM '):
                 if self.first:
-                    if self.saw_from:
-                        raise DockerBuildError('multi-stage not supported yet')
                     self.dockerfile += line + '\n'
-                    self.saw_from = True
+
+                if saw_from:
+                    raise DockerBuildError('multi-stage not supported yet')
+                saw_from = True
 
             elif line.upper().startswith('COPY'):
                 if line.endswith('\\'):
@@ -202,7 +199,7 @@ class BuildContext(object):
                 else:
                     path = copy_to
 
-                self.dockerfile += 'COPY %s %s\n' % (self._extract_file_from_image(image.image, path), path)
+                self.dockerfile += 'COPY --from=%s %s %s\n' % (image.image, path, path)
 
             elif line.upper().startswith('CMD ') or line.upper().startswith('ENTRYPOINT '):
                 continue
@@ -212,44 +209,9 @@ class BuildContext(object):
 
         self.first = False
 
-    def finalize(self):
-        dockerfile_content = self.dockerfile.encode('utf-8')
-
-        info = tarfile.TarInfo('Dockerfile')
-        info.size = len(dockerfile_content)
-        self.context.addfile(info, io.BytesIO(dockerfile_content))
-
-        self.context.close()
-        self.context_bytes.seek(0)
-
-        return self.context_bytes
-
-    def _next_file_id(self):
-        self.file_id += 1
-        return 'extracted' + str(self.file_id)
-
-    def _extract_file_from_image(self, image, path):
-        logging.info('Extracting %s from %s...', path, image)
-
-        container = docker_hl_client.containers.create(image)
-        try:
-            bits, stats = container.get_archive(path)
-            buf = io.BytesIO()
-            for chunk in bits:
-                buf.write(chunk)
-            buf.seek(0)
-            tar = tarfile.TarFile(fileobj=buf)
-
-            src_info = tar.getmembers()[0]
-            src = tar.extractfile(src_info)
-
-            src_info.name = self._next_file_id()
-            self.context.addfile(src_info, src)
-
-            return src_info.name
-        finally:
-            container.stop()
-            container.remove()
+    @property
+    def file(self):
+        return io.BytesIO(self.dockerfile.encode('utf-8'))
 
 
 def main():
@@ -267,16 +229,15 @@ def main():
         logging.info('Up-to-date')
         return 0
 
-    logging.info('Creating build context...')
+    logging.info('Generating Dockerfile...')
 
-    context_builder = BuildContext()
-    context_builder.add_image(image1)
-    context_builder.add_image(image2)
-    context = context_builder.finalize()
+    dockerfile = DockerfileBuilder()
+    dockerfile.add_image(image1)
+    dockerfile.add_image(image2)
 
     logging.info('Rebuilding...')
 
-    build_stream = docker_client.build(fileobj=context, custom_context=True, tag=combo_image.image)
+    build_stream = docker_client.build(fileobj=dockerfile.file, tag=combo_image.image)
     log_stream(build_stream)
 
     if args.push:
