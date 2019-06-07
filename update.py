@@ -240,11 +240,6 @@ def main():
     build_stream = docker_client.build(fileobj=dockerfile.file, tag=combo_image.image)
     log_stream(build_stream)
 
-    if args.push:
-        docker_client.login(os.getenv('DOCKER_USERNAME'), os.getenv('DOCKER_PASSWORD'))
-        push_stream = docker_client.push('%s/%s' % (combo_image.user, combo_image.repo), combo_image.tag, stream=True)
-        log_stream(push_stream)
-
     logging.info('Testing image...')
 
     logging.info('%s --version: %s',
@@ -253,6 +248,13 @@ def main():
     logging.info('%s --version: %s',
                  image2.repo,
                  docker_hl_client.containers.run(combo_image.image, [image2.repo, "--version"]).decode('utf-8').strip())
+
+    if args.push:
+        logging.info('Pushing image...')
+
+        docker_client.login(os.getenv('DOCKER_USERNAME'), os.getenv('DOCKER_PASSWORD'))
+        push_stream = docker_client.push('%s/%s' % (combo_image.user, combo_image.repo), combo_image.tag, stream=True)
+        log_stream(push_stream)
 
     return 0
 
