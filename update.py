@@ -244,10 +244,12 @@ def main():
 
     logging.info('%s --version: %s',
                  image1.repo,
-                 docker_hl_client.containers.run(combo_image.image, [image1.repo, "--version"]).decode('utf-8').strip())
+                 docker_hl_client.containers.run(
+                     combo_image.image, [image1.repo, "--version"], remove=True).decode('utf-8').strip())
     logging.info('%s --version: %s',
                  image2.repo,
-                 docker_hl_client.containers.run(combo_image.image, [image2.repo, "--version"]).decode('utf-8').strip())
+                 docker_hl_client.containers.run(
+                     combo_image.image, [image2.repo, "--version"], remove=True).decode('utf-8').strip())
 
     if args.push:
         logging.info('Pushing image...')
