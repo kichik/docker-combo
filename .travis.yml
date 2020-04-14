@@ -21,8 +21,6 @@ env:
 - "I1=python:3.7 I2=node:10"
 - "I1=ruby:2 I2=node:12"
 - "I1=ruby:2 I2=node:10"
-- "I1=ruby:2.4 I2=node:12"
-- "I1=ruby:2.4 I2=node:10"
 - "I1=ruby:2.5 I2=node:12"
 - "I1=ruby:2.5 I2=node:10"
 - "I1=ruby:2.6 I2=node:12"
