@@ -9,7 +9,7 @@ services:
 install:
 - sudo pip install -r requirements.txt
 script:
-- travis_retry ./update.py `[ $TRAVIS_BRANCH == master ] && echo --push` $C
+- travis_retry python update.py `[ $TRAVIS_BRANCH == master ] && echo --push` $C
 env:
 - C="python:3 node:14"
 - C="python:3 node:12"
