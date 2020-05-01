@@ -26,7 +26,9 @@ def parse_cmdline():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--push', action='store_true')
-    parser.add_argument('images', metavar='IMAGE', type=check_docker_tag, nargs=2)
+    parser.add_argument('--override-env', action='append')
+    parser.add_argument('--override-from')
+    parser.add_argument('images', metavar='IMAGE', type=check_docker_tag, nargs='+')
     return parser.parse_args()
 
 
@@ -122,40 +124,37 @@ def get_from_line(dockerfile):
             return line
 
 
-def is_compatible_from_lines(dockerfile1, dockerfile2):
-    from_line1 = get_from_line(dockerfile1)
-    from_line2 = get_from_line(dockerfile2)
-    if from_line1 == from_line2:
+def is_compatible_from_lines(images):
+    from_lines = [get_from_line(i.dockerfile) for i in images]
+    if all(from_lines[0] == f for f in from_lines):
         return True
 
-    base1 = from_line1.split(' ')[-1].split(':')[0]
-    base2 = from_line2.split(' ')[-1].split(':')[0]
-    if base1 == base2 == 'buildpack-deps':
-        logging.info('Both using FROM buildpack-deps (%s, %s) which are different versions but still compatible',
-                     from_line1, from_line2)
+    bases = [f.split(' ')[-1].split(':')[0] for f in from_lines]
+
+    if all(b == 'buildpack-deps' for b in bases):
+        logging.info('Images using FROM buildpack-deps (%s) which are different versions but still compatible', bases)
         return True
 
-    logging.info('%s != %s', from_line1, from_line2)
+    logging.info('%s', from_lines)
     return False
 
 
-def should_rebuild(combo_image, image1, image2):
+def should_rebuild(combo_image, base_images):
     try:
         combo_image_time = combo_image.build_time
     except DockerImageError:
         logging.info('Combo image not built yet')
         combo_image_time = ''
 
-    image1_time = image1.build_time
-    image2_time = image2.build_time
+    times = [i.build_time for i in base_images]
 
-    return combo_image_time < image1_time or combo_image_time < image2_time
+    return any(combo_image_time < t for t in times)
 
 
-def combine_image_name_and_tag(image1, image2):
-    name = image1.split(':')[0] + '_' + image2.split(':')[0]
-    tag = image1.split(':')[1] + '_' + image2.split(':')[1]
-    return 'combos/%s:%s' % (name, tag)
+def combine_image_name_and_tag(images):
+    name = '_'.join(i.image.split(':')[0] for i in images)
+    tag = '_'.join(i.image.split(':')[1] for i in images)
+    return f'combos/{name}:{tag}'
 
 
 def log_stream(stream):
@@ -168,9 +167,14 @@ def log_stream(stream):
 
 
 class DockerfileBuilder(object):
-    def __init__(self):
+    def __init__(self, from_override, env_overrides):
         self.dockerfile = ''
-        self.first = True
+        self._use_from = True
+        self._env_overrides = env_overrides
+
+        if from_override:
+            self._use_from = False
+            self.dockerfile += f'FROM {from_override}\n'
 
     def add_image(self, image):
         saw_from = False
@@ -178,7 +182,7 @@ class DockerfileBuilder(object):
         for line in image.dockerfile.splitlines():
             line = line.strip()
             if line.upper().startswith('FROM '):
-                if self.first:
+                if self._use_from:
                     self.dockerfile += line + '\n'
 
                 if saw_from:
@@ -204,10 +208,17 @@ class DockerfileBuilder(object):
             elif line.upper().startswith('CMD ') or line.upper().startswith('ENTRYPOINT '):
                 continue
 
+            elif line.upper().startswith('ENV '):
+                _, name, value = re.split('[ \t]+', line, 2)
+                if name in self._env_overrides:
+                    self.dockerfile += f'ENV {name} {self._env_overrides[name]}\n'
+                else:
+                    self.dockerfile += line + '\n'
+
             else:
                 self.dockerfile += line + '\n'
 
-        self.first = False
+        self._use_from = False
 
     @property
     def file(self):
@@ -217,23 +228,24 @@ class DockerfileBuilder(object):
 def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(levelname)s %(message)s')
     args = parse_cmdline()
-    image1 = DockerImage(args.images[0])
-    image2 = DockerImage(args.images[1])
+    images = [DockerImage(i) for i in args.images]
+    override_env = dict(i.split('=', 1) for i in args.override_env)
 
-    if not is_compatible_from_lines(image1.dockerfile, image2.dockerfile):
-        logging.error('%s and %s do not use the same FROM line', image1.image, image2.image)
-        return 1
+    if not args.override_from:
+        if not is_compatible_from_lines(images):
+            logging.error('%s do not use the same FROM line', ' and '.join(i.image for i in images))
+            return 1
 
-    combo_image = DockerImage(combine_image_name_and_tag(image1.image, image2.image))
-    if not should_rebuild(combo_image, image1, image2):
+    combo_image = DockerImage(combine_image_name_and_tag(images))
+    if not should_rebuild(combo_image, images):
         logging.info('Up-to-date')
         return 0
 
     logging.info('Generating Dockerfile...')
 
-    dockerfile = DockerfileBuilder()
-    dockerfile.add_image(image1)
-    dockerfile.add_image(image2)
+    dockerfile = DockerfileBuilder(args.override_from, override_env)
+    for i in images:
+        dockerfile.add_image(i)
 
     logging.info('Rebuilding...')
 
@@ -242,14 +254,8 @@ def main():
 
     logging.info('Testing image...')
 
-    logging.info('%s --version: %s',
-                 image1.repo,
-                 docker_hl_client.containers.run(
-                     combo_image.image, [image1.repo, "--version"], remove=True).decode('utf-8').strip())
-    logging.info('%s --version: %s',
-                 image2.repo,
-                 docker_hl_client.containers.run(
-                     combo_image.image, [image2.repo, "--version"], remove=True).decode('utf-8').strip())
+    for i in images:
+        test_image(combo_image, i)
 
     if args.push:
         logging.info('Pushing image...')
@@ -259,6 +265,15 @@ def main():
         log_stream(push_stream)
 
     return 0
+
+
+def test_image(combo_image, image):
+    version = '--version'
+    if image.repo == 'java':
+        version = '-version'
+    logging.info(f'{image.repo} {version}: %s',
+                 docker_hl_client.containers.run(
+                     combo_image.image, [image.repo, version], remove=True).decode('utf-8').strip())
 
 
 if __name__ == '__main__':
