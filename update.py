@@ -26,7 +26,7 @@ def parse_cmdline():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--push', action='store_true')
-    parser.add_argument('--override-env', action='append')
+    parser.add_argument('--override-env', action='append', default=[])
     parser.add_argument('--override-from')
     parser.add_argument('images', metavar='IMAGE', type=check_docker_tag, nargs='+')
     return parser.parse_args()
@@ -132,7 +132,8 @@ def is_compatible_from_lines(images):
     bases = [f.split(' ')[-1].split(':')[0] for f in from_lines]
 
     if all(b == 'buildpack-deps' for b in bases):
-        logging.info('Images using FROM buildpack-deps (%s) which are different versions but still compatible', bases)
+        logging.info('Images using FROM buildpack-deps (%s) which are different versions but still compatible',
+                     ', '.join(from_lines))
         return True
 
     logging.info('%s', from_lines)
