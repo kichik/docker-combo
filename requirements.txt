@@ -1,5 +1,5 @@
-docker==4.0.1
-requests==2.22.0
-requests[security]==2.22.0
+docker==4.2.0
+requests==2.23.0
+requests[security]==2.23.0
 beautifulsoup4==4.6.0
 Markdown==3.0.1
