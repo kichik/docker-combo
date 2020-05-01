@@ -7,7 +7,7 @@ sudo: required
 services:
   - docker
 install:
-- sudo pip install -r requirements.txt
+- pip install -r requirements.txt
 script:
 - travis_retry python update.py `[ $TRAVIS_BRANCH == master ] && echo --push` $C
 env:
