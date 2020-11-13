@@ -20,7 +20,8 @@ docker_client = docker_hl_client.api
 
 def parse_cmdline():
     def check_docker_tag(value):
-        if value.count(':') != 1 or value[0] == ':' or value[-1] == ':':
+        image = value.split('@')[0]
+        if image.count(':') != 1 or image[0] == ':' or image[-1] == ':':
             raise argparse.ArgumentTypeError('%s is an invalid Docker tag' % value)
         return value
 
@@ -42,9 +43,16 @@ class DockerBuildError(Exception):
 
 class DockerImage(object):
     def __init__(self, image):
-        self.image = image
+        if '@' in image:
+            self.image, dockerfile_url = image.split('@')
+            docekrfile_req = requests.get(dockerfile_url)
+            if docekrfile_req.status_code != 200:
+                raise DockerImageError('Error downloading Dockerfile (%s)' % dockerfile_url)
+            self._dockerfile = docekrfile_req.text
+        else:
+            self.image = image
+            self._dockerfile = None
         self._build_time = None
-        self._dockerfile = None
 
     @property
     def user(self):
@@ -240,7 +248,7 @@ def main():
     combo_image = DockerImage(combine_image_name_and_tag(images))
     if not should_rebuild(combo_image, images):
         logging.info('Up-to-date')
-        return 0
+        #return 0
 
     logging.info('Generating Dockerfile...')
 
@@ -269,12 +277,14 @@ def main():
 
 
 def test_image(combo_image, image):
+    cli = image.repo
     version = '--version'
-    if image.repo == 'java':
+    if image.repo == 'java' or image.repo == 'openjdk':
+        cli = 'java'
         version = '-version'
-    logging.info(f'{image.repo} {version}: %s',
+    logging.info(f'{cli} {version}: %s',
                  docker_hl_client.containers.run(
-                     combo_image.image, [image.repo, version], remove=True).decode('utf-8').strip())
+                     combo_image.image, [cli, version], remove=True, stderr=True).decode('utf-8').strip())
 
 
 if __name__ == '__main__':
