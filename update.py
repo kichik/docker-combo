@@ -248,7 +248,7 @@ def main():
     combo_image = DockerImage(combine_image_name_and_tag(images))
     if not should_rebuild(combo_image, images):
         logging.info('Up-to-date')
-        #return 0
+        return 0
 
     logging.info('Generating Dockerfile...')
 
