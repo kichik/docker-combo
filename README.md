@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/kichik/docker-combo.svg?branch=master)](https://travis-ci.org/kichik/docker-combo)
+[![Actions Status](https://github.com/kichik/docker-combo/workflows/Build%20Images%20Daily/badge.svg)](https://github.com/kichik/docker-combo/actions)
 
 # Docker Combos
 
@@ -16,7 +16,7 @@ The generated combo images are:
 * Always up-to-date
 * Using the exact `Dockerfile` as the official images (with minor modifications to facilitate combining two images into one)
 * Transparently generated using the source code in this repository
-* Pushed to Docker Hub using Travis.ci where you can verify the process
+* Pushed to Docker Hub using GitHub Actions where you can verify the process
 
 ## Usage
 
@@ -31,20 +31,20 @@ Complex projects sometimes require more than one language to run. Examples inclu
 
 ## How does it work?
 
-A cron job is running daily on [Travis.ci](https://travis-ci.org/kichik/docker-combo/) and checks if one of the source images in the combos was updated upstream. If its build date is newer than our combo's build date, a new image is built and pushed to Docker Hub. To build the image the `Dockerfile` of both source images are combined by keeping just one `FROM` line and removing all `CMD` and `ENTRYPOINT` lines. The system also verifies that the same `FROM` line is used on both source images to prevent any conflicts.
+A cron job is running daily on [GitHub Actions](https://github.com/kichik/docker-combo/actions) and checks if one of the source images in the combos was updated upstream. If its build date is newer than our combo's build date, a new image is built and pushed to Docker Hub. To build the image the `Dockerfile` of both source images are combined by keeping just one `FROM` line and removing all `CMD` and `ENTRYPOINT` lines. The system also verifies that the same `FROM` line is used on both source images to prevent any conflicts.
 
 ## Requesting More Combos
 
-To add more combos to be built every day, submit a PR with modifications to `.travis.yml`. Add another line at the bottom of the file with the format:
+To add more combos to be built every day, submit a PR with modifications to `.github/workflows/daily.yml`. Add another line under the `combos` matrix with the format:
 
 ```yaml
-- "I1=image:tag I2=image:tag"
+- image1:tag1 image2:tag2
 ```
 
 So if you wanted to add support for Ruby 2.3 and Node 7 running on Alpine, you'd use:
 
 ```yaml
-- "I1=ruby:2.3-alpine I2=node:7-alpine"
+- ruby:2.3-alpine node:7-alpine
 ```
 
 ### Some PR Rules:
@@ -56,6 +56,6 @@ So if you wanted to add support for Ruby 2.3 and Node 7 running on Alpine, you'd
 
 ## FAQ
 
-**Why are you using Travis.ci instead of Docker Hub to build?**
+**Why are you using GitHub Actions instead of Docker Hub to build?**
 
-> Travis.ci has support for daily builds so we can keep the images up-to-date. Docker Hub requires a branch per build and doesn't support Dynamic `Dockerfile` generation.
+> GitHub Actions has support for daily builds so we can keep the images up-to-date. Docker Hub requires a branch per build and doesn't support Dynamic `Dockerfile` generation.
