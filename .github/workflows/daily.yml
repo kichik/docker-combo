@@ -65,3 +65,8 @@ jobs:
       - name: Build
         run: |
           python update.py `[ ${GITHUB_REF##*/} == master ] && echo --push` ${{ matrix.combos }}
+
+      - name: Image digests
+        run: |
+          # print digests for easy verification
+          docker images --no-trunc
