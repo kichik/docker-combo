@@ -23,10 +23,6 @@ jobs:
         with:
           python-version: 3.8
 
-      - name: Login to DockerHub locally
-        run: |
-          docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}    
-
       - name: Python requirements
         run: |
           pip install -r requirements.txt
@@ -34,6 +30,9 @@ jobs:
       - name: Build
         run: |
           python update.py --push ${{ matrix.combos }}
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Image digests
         run: |
