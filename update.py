@@ -29,6 +29,7 @@ def parse_cmdline():
     parser.add_argument('--push', action='store_true')
     parser.add_argument('--override-env', action='append', default=[])
     parser.add_argument('--override-from')
+    parser.add_argument('--add-gnupg-curl', action='store_true')
     parser.add_argument('images', metavar='IMAGE', type=check_docker_tag, nargs='+')
     return parser.parse_args()
 
@@ -115,7 +116,8 @@ class DockerImage(object):
                     dockerfile_url = dockerfile_urls[0]
 
             if dockerfile_url:
-                dockerfile_url = dockerfile_url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/')
+                dockerfile_url = dockerfile_url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/',
+                                                                                                           '/')
                 docekrfile_req = requests.get(dockerfile_url)
                 if docekrfile_req.status_code != 200:
                     raise DockerImageError('Error downloading Dockerfile (%s)' % dockerfile_url)
@@ -253,6 +255,11 @@ def main():
     logging.info('Generating Dockerfile...')
 
     dockerfile = DockerfileBuilder(args.override_from, override_env)
+    if args.add_gnupg_curl:
+        dockerfile.dockerfile += 'RUN apt-get update && ' \
+                                 'apt-get install -y --no-install-recommends gnupg-curl && ' \
+                                 'rm -rf /var/lib/apt/lists/*\n'
+
     for i in images:
         dockerfile.add_image(i)
 
