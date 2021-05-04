@@ -12,30 +12,30 @@ jobs:
     strategy:
       matrix:
         combos:
+          - python:3 node:16
           - python:3 node:14
           - python:3 node:12
-          - python:3 node:10
+          - python:3.6 node:16
           - python:3.6 node:14
           - python:3.6 node:12
-          - python:3.6 node:10
+          - python:3.7 node:16
           - python:3.7 node:14
           - python:3.7 node:12
-          - python:3.7 node:10
+          - python:3.8 node:16
           - python:3.8 node:14
           - python:3.8 node:12
-          - python:3.8 node:10
+          - ruby:2 node:16
           - ruby:2 node:14
           - ruby:2 node:12
-          - ruby:2 node:10
+          - ruby:2.5 node:16
           - ruby:2.5 node:14
           - ruby:2.5 node:12
-          - ruby:2.5 node:10
+          - ruby:2.6 node:16
           - ruby:2.6 node:14
           - ruby:2.6 node:12
-          - ruby:2.6 node:10
+          - ruby:3 node:16
           - ruby:3 node:14
           - ruby:3 node:12
-          - ruby:3 node:10
           - java:7-jdk node:10 python:3.6 --override-env JAVA_DEBIAN_VERSION=7u261-2.6.22-1~deb8u1 --override-from buildpack-deps:jessie --add-gnupg-curl
           - openjdk:8-jdk@https://raw.githubusercontent.com/docker-library/openjdk/master/8/jdk/buster/Dockerfile node:10 python:3.6 --override-from buildpack-deps:buster
           - openjdk:8-jdk@https://raw.githubusercontent.com/docker-library/openjdk/master/8/jdk/buster/Dockerfile node:12 python:3.6 --override-from buildpack-deps:buster
