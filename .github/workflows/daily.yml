@@ -27,12 +27,12 @@ jobs:
           - ruby:2 node:16
           - ruby:2 node:14
           - ruby:2 node:12
-          - ruby:2.5 node:16
-          - ruby:2.5 node:14
-          - ruby:2.5 node:12
           - ruby:2.6 node:16
           - ruby:2.6 node:14
           - ruby:2.6 node:12
+          - ruby:2.7 node:16
+          - ruby:2.7 node:14
+          - ruby:2.7 node:12
           - ruby:3 node:16
           - ruby:3 node:14
           - ruby:3 node:12
