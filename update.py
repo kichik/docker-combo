@@ -263,6 +263,9 @@ def main():
     for i in images:
         dockerfile.add_image(i)
 
+    # sks servers are deprecated https://sks-keyservers.net/
+    dockerfile.dockerfile = dockerfile.dockerfile.replace("p80.pool.sks-keyservers.net", "keys.openpgp.org")
+
     logging.info('Rebuilding...')
 
     build_stream = docker_client.build(fileobj=dockerfile.file, tag=combo_image.image)
