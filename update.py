@@ -265,6 +265,7 @@ def main():
 
     # sks servers are deprecated https://sks-keyservers.net/
     dockerfile.dockerfile = dockerfile.dockerfile.replace("p80.pool.sks-keyservers.net", "keys.openpgp.org")
+    dockerfile.dockerfile = dockerfile.dockerfile.replace("ipv4.pool.sks-keyservers.net", "keyserver.ubuntu.com")
 
     logging.info('Rebuilding...')
 
