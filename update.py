@@ -30,6 +30,7 @@ def parse_cmdline():
     parser.add_argument('--override-env', action='append', default=[])
     parser.add_argument('--override-from')
     parser.add_argument('--add-gnupg-curl', action='store_true')
+    parser.add_argument('--fix-lets-encrypt', action='store_true')
     parser.add_argument('images', metavar='IMAGE', type=check_docker_tag, nargs='+')
     return parser.parse_args()
 
@@ -259,6 +260,10 @@ def main():
         dockerfile.dockerfile += 'RUN apt-get update && ' \
                                  'apt-get install -y --no-install-recommends gnupg-curl && ' \
                                  'rm -rf /var/lib/apt/lists/*\n'
+
+    if args.fix_lets_encrypt:
+        dockerfile.dockerfile += "RUN sed -ie 's#mozilla/DST_Root_CA_X3.crt#!mozilla/DST_Root_CA_X3.crt#' " \
+                                 "/etc/ca-certificates.conf && update-ca-certificates\n"
 
     for i in images:
         dockerfile.add_image(i)
