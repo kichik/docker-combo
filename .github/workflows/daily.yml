@@ -15,6 +15,7 @@ jobs:
           - python:3 node:16
           - python:3 node:14
           - python:3 node:12
+          - python:3.10-slim node:16-alpine
           - python:3.6 node:16
           - python:3.6 node:14
           - python:3.6 node:12
