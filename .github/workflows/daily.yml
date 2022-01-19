@@ -41,7 +41,6 @@ jobs:
           - ruby:3 node:16
           - ruby:3 node:14
           - ruby:3 node:12
-          - java:7-jdk node:12 python:3.7 --override-env JAVA_DEBIAN_VERSION=7u261-2.6.22-1~deb8u1 --override-from buildpack-deps:jessie --add-gnupg-curl --fix-lets-encrypt
           - openjdk:8-jdk@https://raw.githubusercontent.com/docker-library/openjdk/master/8/jdk/buster/Dockerfile node:12 python:3.7 --override-from buildpack-deps:buster
 
     steps:
