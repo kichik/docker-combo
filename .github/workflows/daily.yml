@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
         combos:
           - python:3 node:16
@@ -32,9 +33,6 @@ jobs:
           - ruby:2 node:16
           - ruby:2 node:14
           - ruby:2 node:12
-          - ruby:2.6 node:16
-          - ruby:2.6 node:14
-          - ruby:2.6 node:12
           - ruby:2.7 node:16
           - ruby:2.7 node:14
           - ruby:2.7 node:12
