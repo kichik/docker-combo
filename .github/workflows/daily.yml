@@ -16,31 +16,23 @@ jobs:
         combos:
           - python:3 node:16
           - python:3 node:14
-          - python:3 node:12
           - python:3.7 node:16
           - python:3.7 node:14
-          - python:3.7 node:12
           - python:3.8 node:16
           - python:3.8 node:14
-          - python:3.8 node:12
           - python:3.9 node:16
           - python:3.9 node:14
-          - python:3.9 node:12
           - python:3.10 node:16
           - python:3.10 node:14
-          - python:3.10 node:12
           - python:3.10-slim-bullseye node:16-bullseye-slim
           - ruby:2 node:16
           - ruby:2 node:14
-          - ruby:2 node:12
           - ruby:2.7 node:16
           - ruby:2.7 node:14
-          - ruby:2.7 node:12
           - ruby:3 node:16
           - ruby:3 node:14
-          - ruby:3 node:12
-          - openjdk:8-jdk@https://raw.githubusercontent.com/docker-library/openjdk/master/8/jdk/buster/Dockerfile node:12 python:3.7 --override-from buildpack-deps:buster
-          - openjdk:11@https://raw.githubusercontent.com/docker-library/openjdk/master/11/jdk/buster/Dockerfile node:12
+          - openjdk:8-jdk@https://raw.githubusercontent.com/docker-library/openjdk/master/8/jdk/buster/Dockerfile node:14 python:3.7 --override-from buildpack-deps:buster
+          - openjdk:11@https://raw.githubusercontent.com/docker-library/openjdk/master/11/jdk/buster/Dockerfile node:14
 
     steps:
       - name: Checkout
