@@ -4,6 +4,12 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      forceUpdate:
+        description: 'Build new images even if base images have not updated'
+        required: true
+        default: false
+        type: boolean
   schedule:
     - cron: "0 0 * * *"
 
@@ -69,7 +75,7 @@ jobs:
 
       - name: Build
         run: |
-          poetry run python update.py `[ ${GITHUB_REF##*/} == master ] && echo --push` ${{ matrix.combos }} --platform ${{ matrix.platform }}
+          poetry run python update.py `[ ${GITHUB_REF##*/} == master ] && echo --push` ${{ matrix.combos }} --platform ${{ matrix.platform }} --forceUpdate ${{ inputs.forceUpdate }}
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
