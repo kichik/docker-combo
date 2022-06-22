@@ -30,6 +30,7 @@ def parse_cmdline():
     parser.add_argument('--override-env', action='append', default=[])
     parser.add_argument('--override-from')
     parser.add_argument('--platform', default='linux/amd64')
+    parser.add_argument('--force-update', action='store_false')
     parser.add_argument('--add-gnupg-curl', action='store_true')
     parser.add_argument('--fix-lets-encrypt', action='store_true')
     parser.add_argument('images', metavar='IMAGE', type=check_docker_tag, nargs='+')
@@ -250,9 +251,10 @@ def main():
             return 1
 
     combo_image = DockerImage(combine_image_name_and_tag(images))
-    if not should_rebuild(combo_image, images):
-        logging.info('Up-to-date')
-        return 0
+    if not args.force_update:
+        if not should_rebuild(combo_image, images):
+            logging.info('Up-to-date')
+            return 0
 
     logging.info('Generating Dockerfile...')
 
