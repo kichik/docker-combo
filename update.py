@@ -29,6 +29,7 @@ def parse_cmdline():
     parser.add_argument('--push', action='store_true')
     parser.add_argument('--override-env', action='append', default=[])
     parser.add_argument('--override-from')
+    parser.add_argument('--platform', default='linux/amd64')
     parser.add_argument('--add-gnupg-curl', action='store_true')
     parser.add_argument('--fix-lets-encrypt', action='store_true')
     parser.add_argument('images', metavar='IMAGE', type=check_docker_tag, nargs='+')
@@ -274,7 +275,7 @@ def main():
 
     logging.info('Rebuilding...')
 
-    build_stream = docker_client.build(fileobj=dockerfile.file, tag=combo_image.image)
+    build_stream = docker_client.build(fileobj=dockerfile.file, tag=combo_image.image, platform=args.platform)
     log_stream(build_stream)
 
     logging.info('Testing image...')
