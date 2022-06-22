@@ -41,13 +41,13 @@ jobs:
           - linux/arm64/v8
         exclude:
           - combos: openjdk:8-jdk@https://raw.githubusercontent.com/docker-library/openjdk/master/8/jdk/buster/Dockerfile node:14 python:3.7 --override-from buildpack-deps:buster
-            platoform: linux/arm32/v6
+            platform: linux/arm32/v6
           - combos: openjdk:8-jdk@https://raw.githubusercontent.com/docker-library/openjdk/master/8/jdk/buster/Dockerfile node:14 python:3.7 --override-from buildpack-deps:buster
-            platoform: linux/arm32/v7
+            platform: linux/arm32/v7
           - combos: openjdk:11@https://raw.githubusercontent.com/docker-library/openjdk/master/11/jdk/buster/Dockerfile node:14
-            platoform: linux/arm32/v6
+            platform: linux/arm32/v6
           - combos: openjdk:11@https://raw.githubusercontent.com/docker-library/openjdk/master/11/jdk/buster/Dockerfile node:14
-            platoform: linux/arm32/v7
+            platform: linux/arm32/v7
 
     steps:
       - name: Checkout
