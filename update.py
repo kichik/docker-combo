@@ -251,7 +251,7 @@ def main():
             logging.error('%s do not use the same FROM line', ' and '.join(i.image for i in images))
             return 1
 
-    combo_image = DockerImage(combine_image_name_and_tag(images))
+    combo_image = DockerImage(combine_image_name_and_tag(images), platform=args.platform)
     if not args.force_update:
         if not should_rebuild(combo_image, images):
             logging.info('Up-to-date')
