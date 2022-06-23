@@ -91,7 +91,7 @@ class DockerImage(object):
         
         resp = req.json()
 
-        if resp.has_key('errinfo'):
+        if 'errinfo' in resp.key():
             raise DockerImageError('Error downloading image information (%s)' % resp['message'])
 
         # I am lazy so just grabbing the first one
