@@ -9,13 +9,16 @@ import re
 import sys
 
 import bs4
-import docker
-import docker.errors
+#import docker
+#import docker.errors
+from python_on_whales import docker
 import markdown
 import requests
+import tempfile
+import shutil
 
-docker_hl_client = docker.from_env()
-docker_client = docker_hl_client.api
+# docker_hl_client = docker.from_env()
+# docker_client = docker_hl_client.api
 
 
 def parse_cmdline():
@@ -46,7 +49,7 @@ class DockerBuildError(Exception):
 
 
 class DockerImage(object):
-    def __init__(self, image, platform):
+    def __init__(self, image):
         if '@' in image:
             self.image, dockerfile_url = image.split('@')
             docekrfile_req = requests.get(dockerfile_url)
@@ -57,7 +60,6 @@ class DockerImage(object):
             self.image = image
             self._dockerfile = None
         self._build_time = None
-        self.platform = platform
 
     @property
     def user(self):
@@ -78,15 +80,22 @@ class DockerImage(object):
         if self._build_time:
             return self._build_time
 
-        # TODO get details without pulling
-        logging.info('Pulling %s', self.image)
+        
+        logging.info('Getting build time for %s', self.image)
+        user = 'library' if self.user == '_' else self.user
+        url = 'https://hub.docker.com/v2/repositories/%s/%s/tags/%s' % (user, self.repo, self.tag)
+        
+        req = requests.get(dockerfile_url)
+        if req.status_code != 200:
+            raise DockerImageError('Error downloading image information (%s)' % dockerfile_url)
+        
+        resp = req.json()
 
-        try:
-            image = docker_hl_client.images.pull(self.image, platform=self.platform)
-        except docker.errors.NotFound:
-            raise DockerImageError('%s not found', self.image)
+        if resp.has_key('errinfo'):
+            raise DockerImageError('Error downloading image information (%s)' % resp['message'])
 
-        self._build_time = image.attrs['Created']
+        # I am lazy so just grabbing the first one
+        self._build_time = resp['images'][0]['last_pushed']
         logging.info('%s was last built on %s', self.image, self._build_time)
         return self._build_time
 
@@ -243,7 +252,7 @@ class DockerfileBuilder(object):
 def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(levelname)s %(message)s')
     args = parse_cmdline()
-    images = [DockerImage(i, platform=args.platform) for i in args.images]
+    images = [DockerImage(i) for i in args.images]
     override_env = dict(i.split('=', 1) for i in args.override_env)
 
     if not args.override_from:
@@ -251,7 +260,7 @@ def main():
             logging.error('%s do not use the same FROM line', ' and '.join(i.image for i in images))
             return 1
 
-    combo_image = DockerImage(combine_image_name_and_tag(images), platform=args.platform)
+    combo_image = DockerImage(combine_image_name_and_tag(images))
     if not args.force_update:
         if not should_rebuild(combo_image, images):
             logging.info('Up-to-date')
@@ -278,7 +287,14 @@ def main():
 
     logging.info('Rebuilding...')
 
-    build_stream = docker_client.build(fileobj=dockerfile.file, tag=combo_image.image, platform=args.platform)
+    # writing to a temp file to pass in to build
+    tempfile = tempfile.mkdtemp() + '/Dockerfile'
+    fileobject = dockerfile.file
+    fileobject.seek(0)
+    with open(tempfile, 'wb') as f:
+        shutil.copyfileobj(fileobject, f, length=999999)
+
+    build_stream = docker.buildx.build(file=tempfile, tags=[combo_image.image], platform=args.platform.split(','), stream_logs=True)
     log_stream(build_stream)
 
     logging.info('Testing image...')
@@ -289,8 +305,8 @@ def main():
     if args.push:
         logging.info('Pushing image...')
 
-        docker_client.login(os.getenv('DOCKER_USERNAME'), os.getenv('DOCKER_PASSWORD'))
-        push_stream = docker_client.push('%s/%s' % (combo_image.user, combo_image.repo), combo_image.tag, stream=True)
+        docker.login(os.getenv('DOCKER_USERNAME'), os.getenv('DOCKER_PASSWORD'))
+        push_stream = docker.push('%s/%s:%s' % (combo_image.user, combo_image.repo, combo_image.tag))
         log_stream(push_stream)
 
     return 0
@@ -302,8 +318,9 @@ def test_image(combo_image, image):
     if image.repo == 'java' or image.repo == 'openjdk':
         cli = 'java'
         version = '-version'
+    
     logging.info(f'{cli} {version}: %s',
-                 docker_hl_client.containers.run(
+                 docker.run(
                      combo_image.image, [cli, version], remove=True, stderr=True).decode('utf-8').strip())
 
 
