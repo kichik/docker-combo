@@ -46,7 +46,7 @@ class DockerBuildError(Exception):
 
 
 class DockerImage(object):
-    def __init__(self, image):
+    def __init__(self, image, platform):
         if '@' in image:
             self.image, dockerfile_url = image.split('@')
             docekrfile_req = requests.get(dockerfile_url)
@@ -57,6 +57,7 @@ class DockerImage(object):
             self.image = image
             self._dockerfile = None
         self._build_time = None
+        self.platform = platform
 
     @property
     def user(self):
@@ -81,7 +82,7 @@ class DockerImage(object):
         logging.info('Pulling %s', self.image)
 
         try:
-            image = docker_hl_client.images.pull(self.image)
+            image = docker_hl_client.images.pull(self.image, platform=self.platform)
         except docker.errors.NotFound:
             raise DockerImageError('%s not found', self.image)
 
@@ -242,7 +243,7 @@ class DockerfileBuilder(object):
 def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(levelname)s %(message)s')
     args = parse_cmdline()
-    images = [DockerImage(i) for i in args.images]
+    images = [DockerImage(i, platform=args.platform) for i in args.images]
     override_env = dict(i.split('=', 1) for i in args.override_env)
 
     if not args.override_from:
