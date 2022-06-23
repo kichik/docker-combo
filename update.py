@@ -85,7 +85,7 @@ class DockerImage(object):
         user = 'library' if self.user == '_' else self.user
         url = 'https://hub.docker.com/v2/repositories/%s/%s/tags/%s' % (user, self.repo, self.tag)
         
-        req = requests.get(dockerfile_url)
+        req = requests.get(url)
         if req.status_code != 200:
             raise DockerImageError('Error downloading image information (%s)' % dockerfile_url)
         
