@@ -288,13 +288,13 @@ def main():
     logging.info('Rebuilding...')
 
     # writing to a temp file to pass in to build
-    tempfile = tempfile.mkdtemp() + '/Dockerfile'
+    temp = tempfile.mkdtemp() + '/Dockerfile'
     fileobject = dockerfile.file
     fileobject.seek(0)
-    with open(tempfile, 'wb') as f:
+    with open(temp, 'wb') as f:
         shutil.copyfileobj(fileobject, f, length=999999)
 
-    build_stream = docker.buildx.build(file=tempfile, tags=[combo_image.image], platform=args.platform.split(','), stream_logs=True)
+    build_stream = docker.buildx.build(file=temp, tags=[combo_image.image], platform=args.platform.split(','), stream_logs=True)
     log_stream(build_stream)
 
     logging.info('Testing image...')
