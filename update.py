@@ -9,8 +9,7 @@ import re
 import sys
 
 import bs4
-#import docker
-#import docker.errors
+import python_on_whales
 from python_on_whales import docker
 import markdown
 import requests
@@ -182,12 +181,13 @@ def combine_image_name_and_tag(images):
 
 
 def log_stream(stream):
-    for lines in stream:
-        for line in lines.decode('utf-8').strip().split('\n'):
-            line = json.loads(line)
-            if line.get('errorDetail'):
-                raise DockerBuildError(line['errorDetail'].get('message', str(line)))
-            logging.info('%s', line.get('stream', str(line)).strip('\n'))
+    for line in stream:
+        logging.info(line)
+        # for line in lines.decode('utf-8').strip().split('\n'):
+        #     line = json.loads(line)
+        #     if line.get('errorDetail'):
+        #         raise DockerBuildError(line['errorDetail'].get('message', str(line)))
+        #     logging.info('%s', line.get('stream', str(line)).strip('\n'))
 
 
 class DockerfileBuilder(object):
@@ -307,8 +307,12 @@ def main():
         logging.info('Pushing image...')
 
         docker.login(os.getenv('DOCKER_USERNAME'), os.getenv('DOCKER_PASSWORD'))
-        push_stream = docker.push('%s/%s:%s' % (combo_image.user, combo_image.repo, combo_image.tag))
-        log_stream(push_stream)
+        try:
+            docker.push('%s/%s:%s' % (combo_image.user, combo_image.repo, combo_image.tag))
+        except python_on_whales.exceptions.NoSuchImage:
+            logging.info('Cannot push image. Image not found')
+        
+        #log_stream(push_stream)
 
     return 0
 
