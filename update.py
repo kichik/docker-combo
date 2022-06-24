@@ -196,8 +196,6 @@ def log_stream(stream):
     for line in stream:
         if 'WARNING: ' in line:
             logging.warning(line.replace('WARNING: ', '', 1))
-        elif 'ERROR: ' in line:
-            logging.error(line.replace('ERROR: ', '', 1))
         else:
             logging.info(line)
 
@@ -326,7 +324,7 @@ def main():
             '.',
             file=temp_dockerfile,
             tags=[combo_image.image],
-            platforms='amd64',
+            platforms=['amd64'],
             push=args.push,
             load=True
         )
@@ -342,14 +340,19 @@ def main():
     if args.push:
         docker.login(os.getenv('DOCKER_USERNAME'), os.getenv('DOCKER_PASSWORD'))
 
-    build_stream = docker.buildx.build(
-        '.',
-        file=temp_dockerfile,
-        tags=[combo_image.image],
-        platforms=args.platform.split(','),
-        push=args.push,
-        stream_logs=True
-    )
+    try:
+        build_stream = docker.buildx.build(
+            '.',
+            file=temp_dockerfile,
+            tags=[combo_image.image],
+            platforms=args.platform.split(','),
+            push=args.push,
+            stream_logs=True
+        )
+    except python_on_whales.exceptions.DockerException as err:
+        logging.error(err)
+
+        return 1
 
     log_stream(build_stream)
 
