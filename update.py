@@ -16,13 +16,10 @@ import requests
 import tempfile
 import shutil
 
-# docker_hl_client = docker.from_env()
-# docker_client = docker_hl_client.api
-
-
 def parse_cmdline():
     def check_docker_tag(value):
         image = value.split('@')[0]
+
         if image.count(':') != 1 or image[0] == ':' or image[-1] == ':':
             raise argparse.ArgumentTypeError('%s is an invalid Docker tag' % value)
         return value
@@ -36,6 +33,7 @@ def parse_cmdline():
     parser.add_argument('--add-gnupg-curl', action='store_true')
     parser.add_argument('--fix-lets-encrypt', action='store_true')
     parser.add_argument('images', metavar='IMAGE', type=check_docker_tag, nargs='+')
+
     return parser.parse_args()
 
 
@@ -52,18 +50,23 @@ class DockerImage(object):
         if '@' in image:
             self.image, dockerfile_url = image.split('@')
             docekrfile_req = requests.get(dockerfile_url)
+
             if docekrfile_req.status_code != 200:
                 raise DockerImageError('Error downloading Dockerfile (%s)' % dockerfile_url)
+
             self._dockerfile = docekrfile_req.text
+
         else:
             self.image = image
             self._dockerfile = None
+
         self._build_time = None
 
     @property
     def user(self):
         if '/' in self.image:
             return self.image.split('/')[0]
+
         return '_'
 
     @property
@@ -81,10 +84,11 @@ class DockerImage(object):
 
         
         logging.info('Getting build time for %s', self.image)
+
         user = 'library' if self.user == '_' else self.user
         url = 'https://hub.docker.com/v2/repositories/%s/%s/tags/%s' % (user, self.repo, self.tag)
-        
         req = requests.get(url)
+
         if req.status_code != 200:
             raise DockerImageError('Error downloading image information (%s)' % dockerfile_url)
         
@@ -96,6 +100,7 @@ class DockerImage(object):
         # I am lazy so just grabbing the first one
         self._build_time = resp['images'][0]['last_pushed']
         logging.info('%s was last built on %s', self.image, self._build_time)
+
         return self._build_time
 
     @property
@@ -109,12 +114,14 @@ class DockerImage(object):
 
         url = 'https://hub.docker.com/api/content/v1/products/images/%s' % (self.repo,)
         hub_req = requests.get(url)
+
         if hub_req.status_code != 200:
             raise DockerImageError('Error connecting to hub (%s)' % hub_req.text)
 
         description = hub_req.json().get('full_description', '')
         description_html = markdown.markdown(description)
         soup = bs4.BeautifulSoup(description_html, 'html.parser')
+
         for node in soup(text=self.tag):
             dockerfile_url = None
 
@@ -124,6 +131,7 @@ class DockerImage(object):
             if node.parent.name == 'code' and node.parent.parent.name == 'li':
                 dockerfile_urls = [a.get('href') for a in node.parent.parent.find_all('a')]
                 dockerfile_urls = [u for u in dockerfile_urls if 'windowsservercore' not in u]
+
                 if len(dockerfile_urls) == 1:
                     dockerfile_url = dockerfile_urls[0]
 
@@ -135,6 +143,7 @@ class DockerImage(object):
                     raise DockerImageError('Error downloading Dockerfile (%s)' % dockerfile_url)
 
                 self._dockerfile = docekrfile_req.text
+
                 return docekrfile_req.text
 
         raise DockerImageError('Unable to find Dockerfile for %s in %s' % (self.tag, url))
@@ -148,6 +157,7 @@ def get_from_line(dockerfile):
 
 def is_compatible_from_lines(images):
     from_lines = [get_from_line(i.dockerfile) for i in images]
+
     if all(from_lines[0] == f for f in from_lines):
         return True
 
@@ -159,6 +169,7 @@ def is_compatible_from_lines(images):
         return True
 
     logging.info('%s', from_lines)
+
     return False
 
 
@@ -177,12 +188,18 @@ def should_rebuild(combo_image, base_images):
 def combine_image_name_and_tag(images):
     name = '_'.join(i.image.split(':')[0] for i in images)
     tag = '_'.join(i.image.split(':')[1] for i in images)
+
     return f'combos/{name}:{tag}'
 
 
 def log_stream(stream):
     for line in stream:
-        logging.info(line)
+        if 'WARNING: ' in line:
+            logging.warning(line.replace('WARNING: ', '', 1))
+        elif 'ERROR: ' in line:
+            logging.error(line.replace('ERROR: ', '', 1))
+        else:
+            logging.info(line)
 
 
 class DockerfileBuilder(object):
@@ -200,12 +217,14 @@ class DockerfileBuilder(object):
 
         for line in image.dockerfile.splitlines():
             line = line.strip()
+
             if line.upper().startswith('FROM '):
                 if self._use_from:
                     self.dockerfile += line + '\n'
 
                 if saw_from:
                     raise DockerBuildError('multi-stage not supported yet')
+                
                 saw_from = True
 
             elif line.upper().startswith('COPY'):
@@ -213,10 +232,12 @@ class DockerfileBuilder(object):
                     raise DockerBuildError('multi-line COPY commands not supported yet')
 
                 m = re.match('^COPY[ \t]+([^ \t]+)[ \t]+([^ \t]+)$', line, re.I)
+
                 if not m:
                     raise DockerBuildError('unable to parse COPY line: ' + line)
 
                 copy_from, copy_to = m.groups()
+
                 if copy_to.endswith('/'):
                     path = copy_to + os.path.basename(copy_from)
                 else:
@@ -229,6 +250,7 @@ class DockerfileBuilder(object):
 
             elif line.upper().startswith('ENV '):
                 _, name, value = re.split('[ \t]+', line, 2)
+
                 if name in self._env_overrides:
                     self.dockerfile += f'ENV {name} {self._env_overrides[name]}\n'
                 else:
@@ -246,6 +268,7 @@ class DockerfileBuilder(object):
 
 def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(levelname)s %(message)s')
+    
     args = parse_cmdline()
     images = [DockerImage(i) for i in args.images]
     override_env = dict(i.split('=', 1) for i in args.override_env)
@@ -253,17 +276,21 @@ def main():
     if not args.override_from:
         if not is_compatible_from_lines(images):
             logging.error('%s do not use the same FROM line', ' and '.join(i.image for i in images))
+
             return 1
 
     combo_image = DockerImage(combine_image_name_and_tag(images))
+
     if not args.force_update:
         if not should_rebuild(combo_image, images):
             logging.info('Up-to-date')
+
             return 0
 
     logging.info('Generating Dockerfile...')
 
     dockerfile = DockerfileBuilder(args.override_from, override_env)
+
     if args.add_gnupg_curl:
         dockerfile.dockerfile += 'RUN apt-get update && ' \
                                  'apt-get install -y --no-install-recommends gnupg-curl && ' \
@@ -284,22 +311,29 @@ def main():
 
     # writing to a temp file to pass in to build
     tempdir = '/tmp/' + combo_image.repo
-    os.mkdir(tempdir)
     temp_dockerfile = tempdir + '/Dockerfile'
     fileobject = dockerfile.file
     fileobject.seek(0)
+
+    os.mkdir(tempdir)
+
     with open(temp_dockerfile, 'wb') as f:
         shutil.copyfileobj(fileobject, f, length=999999)
 
     # First do a single arch build so that we can test
-    build_image = docker.buildx.build(
-        '.',
-        file=temp_dockerfile,
-        tags=[combo_image.image],
-        platforms=['amd64'],
-        push=args.push,
-        load=True
-    )
+    try:
+        build_image = docker.buildx.build(
+            '.',
+            file=temp_dockerfile,
+            tags=[combo_image.image],
+            platforms='amd64',
+            push=args.push,
+            load=True
+        )
+    except python_on_whales.exceptions.DockerException as err:
+        logging.error(err)
+
+        return 1
 
     logging.info('Testing single arch image...')
     for i in images:
@@ -337,9 +371,10 @@ def test_image(combo_image, image):
         cli = 'java'
         version = '-version'
     
-    logging.info(f'{cli} {version}: %s',
-                 docker.run(
-                     combo_image.image, [cli, version], remove=True))
+    logging.info(
+        f'{cli} {version}: %s',
+        docker.run(combo_image.image, [cli, version], remove=True)
+    )
 
 
 if __name__ == '__main__':
