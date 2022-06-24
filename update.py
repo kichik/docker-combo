@@ -283,22 +283,23 @@ def main():
     logging.info('Rebuilding...')
 
     # writing to a temp file to pass in to build
-    tempdir = tempfile.mkdtemp()
-    tempdockerfile = tempdir + '/Dockerfile'
+    tempdir = os.mkdir('/tmp/' + combo_image.repo)
+    temp_dockerfile = tempdir + '/Dockerfile'
     fileobject = dockerfile.file
     fileobject.seek(0)
-    with open(tempdockerfile, 'wb') as f:
+    with open(temp_dockerfile, 'wb') as f:
         shutil.copyfileobj(fileobject, f, length=999999)
 
     build_stream = docker.buildx.build(
         tempdir,
-        file=tempdockerfile,
-        tags=['%s/%s:%s' % (combo_image.user, combo_image.repo, combo_image.tag)],
+        file=temp_dockerfile,
+        tags=[combo_image.image],
         platforms=args.platform.split(','),
         stream_logs=True
     )
 
     log_stream(build_stream)
+    logging.info(docker.images())
     logging.info('Testing image...')
 
     for i in images:
@@ -309,7 +310,7 @@ def main():
 
         docker.login(os.getenv('DOCKER_USERNAME'), os.getenv('DOCKER_PASSWORD'))
         try:
-            docker.push('%s/%s:%s' % (combo_image.user, combo_image.repo, combo_image.tag))
+            docker.push(combo_image.image)
         except python_on_whales.exceptions.NoSuchImage:
             logging.info('Cannot push image. Image not found')
 
