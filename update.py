@@ -294,7 +294,7 @@ def main():
     with open(temp, 'wb') as f:
         shutil.copyfileobj(fileobject, f, length=999999)
 
-    build_stream = docker.buildx.build(file=temp, tags=[combo_image.image], platform=args.platform.split(','), stream_logs=True)
+    build_stream = docker.buildx.build(file=temp, tags=[combo_image.image], platforms=args.platform.split(','), stream_logs=True)
     log_stream(build_stream)
 
     logging.info('Testing image...')
