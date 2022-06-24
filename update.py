@@ -183,11 +183,6 @@ def combine_image_name_and_tag(images):
 def log_stream(stream):
     for line in stream:
         logging.info(line)
-        # for line in lines.decode('utf-8').strip().split('\n'):
-        #     line = json.loads(line)
-        #     if line.get('errorDetail'):
-        #         raise DockerBuildError(line['errorDetail'].get('message', str(line)))
-        #     logging.info('%s', line.get('stream', str(line)).strip('\n'))
 
 
 class DockerfileBuilder(object):
@@ -295,7 +290,7 @@ def main():
     with open(tempdockerfile, 'wb') as f:
         shutil.copyfileobj(fileobject, f, length=999999)
 
-    build_stream = docker.buildx.build(tempdir, file=tempdockerfile, tags=[combo_image.image], platforms=args.platform.split(','), stream_logs=True)
+    build_stream = docker.buildx.build(tempdir, file=tempdockerfile, tags=[combo_image.tag], platforms=args.platform.split(','), stream_logs=True)
     log_stream(build_stream)
 
     logging.info('Testing image...')
@@ -311,8 +306,6 @@ def main():
             docker.push('%s/%s:%s' % (combo_image.user, combo_image.repo, combo_image.tag))
         except python_on_whales.exceptions.NoSuchImage:
             logging.info('Cannot push image. Image not found')
-        
-        #log_stream(push_stream)
 
     return 0
 
