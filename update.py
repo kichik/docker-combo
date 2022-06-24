@@ -290,9 +290,15 @@ def main():
     with open(tempdockerfile, 'wb') as f:
         shutil.copyfileobj(fileobject, f, length=999999)
 
-    build_stream = docker.buildx.build(tempdir, file=tempdockerfile, tags=[combo_image.tag], platforms=args.platform.split(','), stream_logs=True)
-    log_stream(build_stream)
+    build_stream = docker.buildx.build(
+        tempdir,
+        file=tempdockerfile,
+        tags=['%s/%s:%s' % (combo_image.user, combo_image.repo, combo_image.tag)],
+        platforms=args.platform.split(','),
+        stream_logs=True
+    )
 
+    log_stream(build_stream)
     logging.info('Testing image...')
 
     for i in images:
