@@ -292,11 +292,11 @@ def main():
         shutil.copyfileobj(fileobject, f, length=999999)
 
     build_stream = docker.buildx.build(
-        tempdir,
+        '.',
         file=temp_dockerfile,
         tags=[combo_image.image],
         platforms=args.platform.split(','),
-        load=True,
+     #   load=True,
         stream_logs=True
     )
 
