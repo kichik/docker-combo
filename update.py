@@ -296,6 +296,7 @@ def main():
         file=temp_dockerfile,
         tags=[combo_image.image],
         platforms=args.platform.split(','),
+        load=True,
         stream_logs=True
     )
 
