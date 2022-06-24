@@ -296,7 +296,7 @@ def main():
         '.',
         file=temp_dockerfile,
         tags=[combo_image.image],
-        platforms='amd64',
+        platforms=['amd64'],
         push=args.push,
         load=True
     )
