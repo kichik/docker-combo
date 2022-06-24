@@ -296,11 +296,11 @@ def main():
         file=temp_dockerfile,
         tags=[combo_image.image],
         platforms=args.platform.split(','),
-     #   load=True,
-        stream_logs=True
+        load=True,
+    #    stream_logs=True
     )
 
-    log_stream(build_stream)
+    #log_stream(build_stream)
     logging.info(docker.images())
     logging.info('Testing image...')
 
