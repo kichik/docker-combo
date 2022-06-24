@@ -326,7 +326,7 @@ def test_image(combo_image, image):
     
     logging.info(f'{cli} {version}: %s',
                  docker.run(
-                     combo_image.image, [cli, version], remove=True, stderr=True).decode('utf-8').strip())
+                     combo_image.image, [cli, version], remove=True).decode('utf-8').strip())
 
 
 if __name__ == '__main__':
