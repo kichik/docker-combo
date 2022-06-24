@@ -283,8 +283,8 @@ def main():
     logging.info('Rebuilding...')
 
     # writing to a temp file to pass in to build
-    tempdir = os.mkdir('/tmp/' + combo_image.repo)
-    temp_dockerfile = tempdir + '/Dockerfile'
+    os.mkdir('/tmp/' + combo_image.repo)
+    temp_dockerfile = '/tmp/' + combo_image.repo + '/Dockerfile'
     fileobject = dockerfile.file
     fileobject.seek(0)
     with open(temp_dockerfile, 'wb') as f:
