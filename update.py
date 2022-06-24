@@ -291,30 +291,41 @@ def main():
     with open(temp_dockerfile, 'wb') as f:
         shutil.copyfileobj(fileobject, f, length=999999)
 
+    # First do a single arch build so that we can test
+    build_image = docker.buildx.build(
+        '.',
+        file=temp_dockerfile,
+        tags=[combo_image.image],
+        platforms='amd64',
+        push=args.push,
+        load=True
+    )
+
+    logging.info('Testing single arch image...')
+    for i in images:
+        test_image(combo_image, i)
+
+    if args.push:
+        docker.login(os.getenv('DOCKER_USERNAME'), os.getenv('DOCKER_PASSWORD'))
+
     build_stream = docker.buildx.build(
         '.',
         file=temp_dockerfile,
         tags=[combo_image.image],
         platforms=args.platform.split(','),
-        load=True,
-    #    stream_logs=True
+        push=args.push,
+        stream_logs=True
     )
 
-    #log_stream(build_stream)
-    logging.info(docker.images())
-    logging.info('Testing image...')
-
-    for i in images:
-        test_image(combo_image, i)
+    log_stream(build_stream)
 
     if args.push:
-        logging.info('Pushing image...')
-
-        docker.login(os.getenv('DOCKER_USERNAME'), os.getenv('DOCKER_PASSWORD'))
-        try:
-            docker.push(combo_image.image)
-        except python_on_whales.exceptions.NoSuchImage:
-            logging.info('Cannot push image. Image not found')
+        # Since this is a multi platform build,
+        # we can only test after we push
+        
+        logging.info('Testing from docker hub...')
+        for i in images:
+            test_image(combo_image, i)
 
     return 0
 
