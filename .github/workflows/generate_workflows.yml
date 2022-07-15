@@ -1,0 +1,47 @@
+name: Build Workflow YAML
+#TODO: Delete this file
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - combos.yml
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+          echo "$HOME/.poetry/bin" >> $GITHUB_PATH
+
+      - name: Python requirements
+        run: |
+          poetry install
+
+      - name: Build
+        run: |
+          poetry run python generate_workflow.py
+
+      - name: Commit files
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git commit -m "Generating new workflows" -a
+
+      - name: Push changes
+        uses: ad-m/github-push-action@9a46ba8d86d3171233e861a4351b1278a2805c83
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}

@@ -45,7 +45,7 @@ class DockerBuildError(Exception):
 
 
 class DockerImage(object):
-    def __init__(self, image):
+    def __init__(self, image, platform):
         if '@' in image:
             self.image, dockerfile_url = image.split('@')
             docekrfile_req = requests.get(dockerfile_url)
@@ -60,6 +60,7 @@ class DockerImage(object):
             self._dockerfile = None
 
         self._build_time = None
+        self.platform = platform
 
     @property
     def user(self):
@@ -74,7 +75,7 @@ class DockerImage(object):
 
     @property
     def tag(self):
-        return self.image.split(':')[1]
+        return self.image.split(':')[1] + "-" + self.platform.replace("/", "_")
 
     @property
     def build_time(self):
@@ -267,7 +268,7 @@ def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(levelname)s %(message)s')
     
     args = parse_cmdline()
-    images = [DockerImage(i) for i in args.images]
+    images = [DockerImage(i, args.platform) for i in args.images]
     override_env = dict(i.split('=', 1) for i in args.override_env)
 
     if not args.override_from:
@@ -317,12 +318,8 @@ def main():
     with open(temp_dockerfile, 'wb') as f:
         shutil.copyfileobj(fileobject, f, length=999999)
 
-    logging.info('Testing single arch image...')
-    for i in images:
-        test_image(combo_image, i)
-
     if args.push:
-        docker.login(os.getenv('DOCKER_USERNAME'), os.getenv('DOCKER_PASSWORD'))
+        
 
     try:
         build_stream = docker.buildx.build(
@@ -344,10 +341,10 @@ def main():
         test_image(combo_image, i)
 
     if args.push:
-
+        docker.login(os.getenv('DOCKER_USERNAME'), os.getenv('DOCKER_PASSWORD'))
         
         logging.info('Pushing to docker hub...')
-        #TODO: Write code to push after test
+        docker.push(combo_image.image)
 
     return 0
 

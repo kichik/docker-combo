@@ -1,8 +1,11 @@
+import argparse
 import io
 import logging
+import os
+from pathlib import Path
+import pprint
 import sys
 from yaml import load, dump, Loader, SafeDumper
-import pprint
 
 template = {
     "name": "Build Images Daily",
@@ -113,12 +116,24 @@ template = {
 def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(levelname)s %(message)s')
 
+    filepath = ".github/workflows/"
+
+    # First delete any existing files. This will
+    # wipe any combos that should no longer exists.
+    #files = glob.glob(filepath + "*_workflow.yml")
+    for file in Path(filepath).glob("*_workflow.yml"):
+        try:
+            file.unlink()
+        except OSError as e:
+            print("Error: %s : %s" % (f, e.strerror))
+
+    # Now create the new files
     combos = load(io.open("combos.yml", "r"), Loader=Loader)
     for data in combos:
         comboname = generate_image_name(data['images'])
         tag = generate_image_tag(data['images'])
         nametag = comboname + ":" + tag
-        filename = nametag.replace(":", "_") + "_workflow.yml"
+        filename = nametag.replace(":", "_") + "_workflow"
         images = []
 
         for platform in data["platforms"]:
@@ -131,15 +146,13 @@ def main():
 
         dump(
             template,
-            io.open(".github/workflows/" + filename.replace("/", "_").replace(":", "_").replace(".", "_"), "w"),
+            io.open(filepath + filename.replace("/", "_").replace(":", "_").replace(".", "_") + ".yml", "w"),
             Dumper=SafeDumper,
             sort_keys=False,
             allow_unicode=True,
             width=5000,
             line_break='\n'
         )
-        sys.exit()
-        
 
 def generate_image_name(combos):
     combos = combos.copy()
