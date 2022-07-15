@@ -2,7 +2,6 @@
 
 import argparse
 import io
-import json
 import logging
 import os
 import re
@@ -90,7 +89,7 @@ class DockerImage(object):
         req = requests.get(url)
 
         if req.status_code != 200:
-            raise DockerImageError('Error downloading image information (%s)' % dockerfile_url)
+            raise DockerImageError('Error downloading image information (%s)' % url)
         
         resp = req.json()
 
@@ -318,21 +317,6 @@ def main():
     with open(temp_dockerfile, 'wb') as f:
         shutil.copyfileobj(fileobject, f, length=999999)
 
-    # First do a single arch build so that we can test
-    try:
-        build_image = docker.buildx.build(
-            '.',
-            file=temp_dockerfile,
-            tags=[combo_image.image],
-            platforms=['amd64'],
-            push=args.push,
-            load=True
-        )
-    except python_on_whales.exceptions.DockerException as err:
-        logging.error(err)
-
-        return 1
-
     logging.info('Testing single arch image...')
     for i in images:
         test_image(combo_image, i)
@@ -345,8 +329,7 @@ def main():
             '.',
             file=temp_dockerfile,
             tags=[combo_image.image],
-            platforms=args.platform.split(','),
-            push=args.push,
+            platforms=[args.platform],
             stream_logs=True
         )
     except python_on_whales.exceptions.DockerException as err:
@@ -356,13 +339,15 @@ def main():
 
     log_stream(build_stream)
 
+    logging.info('Testing...')
+    for i in images:
+        test_image(combo_image, i)
+
     if args.push:
-        # Since this is a multi platform build,
-        # we can only test after we push
+
         
-        logging.info('Testing from docker hub...')
-        for i in images:
-            test_image(combo_image, i)
+        logging.info('Pushing to docker hub...')
+        #TODO: Write code to push after test
 
     return 0
 
