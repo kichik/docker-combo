@@ -1,13 +1,10 @@
 import argparse
-from collections import OrderedDict
 import io
 import logging
 import os
 from pathlib import Path
-import pprint
-import sys
 from ruamel.yaml import YAML
-
+import sys
 
 def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(levelname)s %(message)s')
@@ -31,8 +28,7 @@ def main():
 
     # Now create the new files
     combos = yaml.load(io.open("combos.yml", "r"))
-    #pp = pprint.PrettyPrinter(indent=4)
-    #pp.pprint(combos)
+
     for data in combos:
         comboname = generate_image_name(data['images'])
         tag = generate_image_tag(data['images'])
@@ -53,7 +49,6 @@ def main():
             template,
             io.open(filepath + filename.replace("/", "_").replace(":", "_").replace(".", "_") + ".yml", "w")
         )
-        sys.exit()
 
 def generate_image_name(combos):
     combos = combos.copy()
