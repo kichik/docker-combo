@@ -37,6 +37,8 @@ jobs:
           git commit -m "Generating new workflows" -a
 
       - name: Push changes
+        permissions:
+          workflows: write
         uses: ad-m/github-push-action@9a46ba8d86d3171233e861a4351b1278a2805c83
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
