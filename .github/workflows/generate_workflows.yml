@@ -2,6 +2,11 @@ name: Build Workflow YAML
 on:
   workflow_dispatch:
   push:
+    branches:
+      - master
+    paths:
+      - combos.yml
+      - template.yml
 
 jobs:
   build:
@@ -33,6 +38,7 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
+          git add .github/workflows/combos*.yml
           git commit -m "Generating new workflows" -a
 
       - name: Push changes
