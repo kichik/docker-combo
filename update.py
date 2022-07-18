@@ -318,9 +318,6 @@ def main():
     with open(temp_dockerfile, 'wb') as f:
         shutil.copyfileobj(fileobject, f, length=999999)
 
-    if args.push:
-        
-
     try:
         build_stream = docker.buildx.build(
             '.',

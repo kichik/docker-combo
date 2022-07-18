@@ -7,6 +7,7 @@ on:
       - master
     paths:
       - combos.yml
+      - template.yml
 
 jobs:
   build:
