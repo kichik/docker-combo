@@ -2,11 +2,6 @@ name: Build Workflow YAML
 on:
   workflow_dispatch:
   push:
-    branches:
-      - master
-    paths:
-      - combos.yml
-      - template.yml
 
 jobs:
   build:
