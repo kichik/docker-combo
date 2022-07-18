@@ -1,5 +1,4 @@
 name: Build Workflow YAML
-#TODO: Delete this file
 on:
   workflow_dispatch:
   push:
