@@ -51,6 +51,10 @@ jobs:
         DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
 
+    - name: See if env is correct
+      run: |
+        echo $COMBO_IMAGE
+
     - uses: actions/upload-artifact@v3
       with:
         name: ${{ env.COMBO_IMAGE }}
