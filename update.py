@@ -284,7 +284,7 @@ def main():
     combo_image = DockerImage(combine_image_name_and_tag(images), args.platform)
 
     # Set an env variable of the combo imaage for the artifact name for this job
-    os.environ['COMBO_IMAGE'] = combo_image.image.replace(':', '_')
+    os.environ['COMBO_IMAGE'] = combo_image.repo + "_" + combo_image.tag.replace('.', '_')
 
     if not args.force_update:
         if not should_rebuild(combo_image, images):
