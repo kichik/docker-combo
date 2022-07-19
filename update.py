@@ -283,9 +283,16 @@ def main():
 
     combo_image = DockerImage(combine_image_name_and_tag(images), args.platform)
 
+    # Set an env variable of the combo imaage for the artifact name for this job
+    os.environ['COMBO_IMAGE'] = combo_image.image.replace(':', '_')
+
     if not args.force_update:
         if not should_rebuild(combo_image, images):
             logging.info('Up-to-date')
+            # Write to a file so that we know that there are
+            # this image isn't updated
+            with open("output.txt", "w") as file:
+                file.write("False\n")
 
             return 0
 
@@ -346,6 +353,11 @@ def main():
         
         logging.info('Pushing to docker hub...')
         docker.push(combo_image.image)
+
+        # Write to a file so that we know that there are
+        # new images that need added to the manifest
+        with open("output.txt", "w") as file:
+            file.write("True\n")
 
     return 0
 

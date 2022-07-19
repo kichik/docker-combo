@@ -42,8 +42,8 @@ def main():
 
         template["jobs"]["build"]["strategy"]["matrix"]["combo"] = [" ".join(data['images'])]
         template["jobs"]["build"]["strategy"]["matrix"]["platform"] = data["platforms"]
-        template["jobs"]["manifest"]["steps"][1]["with"]["base-image"] = nametag
-        template["jobs"]["manifest"]["steps"][1]["with"]["extra-images"] = ",".join(images)
+        template["jobs"]["manifest"]["steps"][3]["with"]["base-image"] = nametag
+        template["jobs"]["manifest"]["steps"][3]["with"]["extra-images"] = ",".join(images)
 
         yaml.dump(
             template,
