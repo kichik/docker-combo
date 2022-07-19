@@ -48,7 +48,6 @@ jobs:
       id: build
       run: |
         poetry run python update.py `[ ${GITHUB_REF##*/} == master ] && echo --push` ${{ matrix.combo }} --platform ${{ matrix.platform }} ${{ inputs.forceUpdate && '--force-update' || '' }}
-        echo "::set-output name=combo_image::$COMBO_IMAGE"
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
