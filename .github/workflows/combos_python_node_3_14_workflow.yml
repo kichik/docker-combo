@@ -45,19 +45,17 @@ jobs:
         poetry install
 
     - name: Build
+      id: build
       run: |
         poetry run python update.py `[ ${GITHUB_REF##*/} == master ] && echo --push` ${{ matrix.combo }} --platform ${{ matrix.platform }} ${{ inputs.forceUpdate && '--force-update' || '' }}
+        echo "::set-output name=combo_image::$COMBO_IMAGE"
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: See if env is correct
-      run: |
-        echo $COMBO_IMAGE
-
     - uses: actions/upload-artifact@v3
       with:
-        name: ${{ env.COMBO_IMAGE }}
+        name: ${{ steps.build.outputs.combo-image }}
         path: output.txt
 
     - name: Image digests
