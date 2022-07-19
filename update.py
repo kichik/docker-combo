@@ -78,6 +78,10 @@ class DockerImage(object):
         return self.image.split(':')[1] + "-" + self.platform.replace("/", "_")
 
     @property
+    def base_tag(self):
+        return self.image.split(':')[1]
+
+    @property
     def build_time(self):
         if self._build_time:
             return self._build_time
@@ -86,7 +90,7 @@ class DockerImage(object):
         logging.info('Getting build time for %s', self.image)
 
         user = 'library' if self.user == '_' else self.user
-        url = 'https://hub.docker.com/v2/repositories/%s/%s/tags/%s' % (user, self.repo, self.tag)
+        url = 'https://hub.docker.com/v2/repositories/%s/%s/tags/%s' % (user, self.repo, self.base_tag)
         req = requests.get(url)
 
         if req.status_code != 200:
@@ -122,7 +126,7 @@ class DockerImage(object):
         description_html = markdown.markdown(description)
         soup = bs4.BeautifulSoup(description_html, 'html.parser')
 
-        for node in soup(text=self.tag):
+        for node in soup(text=self.base_tag):
             dockerfile_url = None
 
             if node.parent.name == 'code' and node.parent.parent.name == 'a':
@@ -146,7 +150,7 @@ class DockerImage(object):
 
                 return docekrfile_req.text
 
-        raise DockerImageError('Unable to find Dockerfile for %s in %s' % (self.tag, url))
+        raise DockerImageError('Unable to find Dockerfile for %s in %s' % (self.base_tag, url))
 
 
 def get_from_line(dockerfile):
@@ -277,7 +281,7 @@ def main():
 
             return 1
 
-    combo_image = DockerImage(combine_image_name_and_tag(images))
+    combo_image = DockerImage(combine_image_name_and_tag(images), args.platform)
 
     if not args.force_update:
         if not should_rebuild(combo_image, images):
