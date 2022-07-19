@@ -71,7 +71,7 @@ jobs:
     - name: Check for new images
       id: image-check
       working-directory: ${{ steps.download.outputs.download-path }}
-      run: if grep -qs False openjdk_node_11_14*/output.txt; then echo "::set-output name=new_image::false"; else echo "::set-output name=new_image::true"; fi
+      run: if grep -qs False combos_openjdk_node_11_14*/output.txt; then echo "::set-output name=new_image::false"; else echo "::set-output name=new_image::true"; fi
 
     - name: Login to Docker Hub
       uses: docker/login-action@d398f07826957cd0a18ea1b059cf1207835e60bc

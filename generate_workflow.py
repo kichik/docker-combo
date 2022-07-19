@@ -34,23 +34,22 @@ def main():
         tag = generate_image_tag(data['images'])
         nametag = comboname + ":" + tag
         template['name'] = nametag
-        filename = nametag.replace(":", "_")
+        filename = nametag.replace(":", "_").replace("/", "_").replace(":", "_").replace(".", "_")
         images = []
         outvar = '::set-output name=new_image::'
-        searchvar = filename.split('/')[1]
 
         for platform in data["platforms"]:
             images.append(nametag + "-" + platform.replace("/", "_"))
 
         template["jobs"]["build"]["strategy"]["matrix"]["combo"] = [" ".join(data['images'])]
         template["jobs"]["build"]["strategy"]["matrix"]["platform"] = data["platforms"]
-        template["jobs"]["manifest"]["steps"][1]["run"] = f'if grep -qs False {searchvar}*/output.txt; then echo "{outvar}false"; else echo "{outvar}true"; fi'
+        template["jobs"]["manifest"]["steps"][1]["run"] = f'if grep -qs False {filename}*/output.txt; then echo "{outvar}false"; else echo "{outvar}true"; fi'
         template["jobs"]["manifest"]["steps"][3]["with"]["base-image"] = nametag
         template["jobs"]["manifest"]["steps"][3]["with"]["extra-images"] = ",".join(images)
 
         yaml.dump(
             template,
-            io.open(filepath + filename.replace("/", "_").replace(":", "_").replace(".", "_") + "_workflow.yml", "w")
+            io.open(f'{filepath}{filename}_workflow.yml', "w")
         )
 
 def generate_image_name(combos):
