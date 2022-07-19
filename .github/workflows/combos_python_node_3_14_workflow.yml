@@ -70,19 +70,20 @@ jobs:
       uses: actions/download-artifact@v3
 
     - name: Check for new images
+      id: image-check
       working-directory: ${{ steps.download.outputs.download-path }}
-      run: |
-        ls -R
+      run: if grep -qs False python_node_3_14*/output.txt; then echo "::set-output name=new_image::false"; else echo "::set-output name=new_image::true"; fi
 
     - name: Login to Docker Hub
       uses: docker/login-action@d398f07826957cd0a18ea1b059cf1207835e60bc
+      if: ${{ steps.image-check.outputs.new_image == 'true' }}
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Create and push manifest images
       uses: Noelware/docker-manifest-action@191bad46d87f7a70c8a82054d4cf98ee8b942dca
-      if: ${{ github.ref_name == 'master' }}
+      if: ${{ github.ref_name == 'master' && steps.image-check.outputs.new_image == 'true' }}
       with:
         base-image: combos/python_node:3_14
         extra-images: combos/python_node:3_14-linux_arm_v7,combos/python_node:3_14-linux_arm64_v8,combos/python_node:3_14-linux_amd64
