@@ -1,4 +1,4 @@
-name: combos/ruby_node:3_14
+name: combos/python_node:3.8_16
 
 on:
   push:
@@ -21,7 +21,7 @@ jobs:
       fail-fast: false
       matrix:
         combo:
-        - ruby:3 node:14
+        - python:3.8 node:16
         platform:
         - linux/arm/v7
         - linux/arm64/v8
@@ -72,7 +72,7 @@ jobs:
     - name: Check for new images
       id: image-check
       working-directory: ${{ steps.download.outputs.download-path }}
-      run: if grep -qs False ruby_node_3_14*/output.txt; then echo "::set-output name=new_image::false"; else echo "::set-output name=new_image::true"; fi
+      run: if grep -qs False python_node_3.8_16*/output.txt; then echo "::set-output name=new_image::false"; else echo "::set-output name=new_image::true"; fi
 
     - name: Login to Docker Hub
       uses: docker/login-action@d398f07826957cd0a18ea1b059cf1207835e60bc
@@ -85,6 +85,6 @@ jobs:
       uses: Noelware/docker-manifest-action@191bad46d87f7a70c8a82054d4cf98ee8b942dca
       if: ${{ github.ref_name == 'master' && steps.image-check.outputs.new_image == 'true' }}
       with:
-        base-image: combos/ruby_node:3_14
-        extra-images: combos/ruby_node:3_14-linux_arm_v7,combos/ruby_node:3_14-linux_arm64_v8,combos/ruby_node:3_14-linux_amd64
+        base-image: combos/python_node:3.8_16
+        extra-images: combos/python_node:3.8_16-linux_arm_v7,combos/python_node:3.8_16-linux_arm64_v8,combos/python_node:3.8_16-linux_amd64
         push: true
