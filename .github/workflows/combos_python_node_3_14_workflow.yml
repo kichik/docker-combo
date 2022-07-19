@@ -54,7 +54,7 @@ jobs:
 
     - uses: actions/upload-artifact@v3
       with:
-        name: ${{ steps.build.outputs.combo-image }}
+        name: ${{ steps.build.outputs.combo_image }}
         path: output.txt
 
     - name: Image digests
