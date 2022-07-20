@@ -10,6 +10,8 @@ docker = "^5.0.3"
 requests = {extras = ["security"], version = "^2.26.0"}
 beautifulsoup4 = "^4.10.0"
 Markdown = "^3.3.4"
+python-on-whales = "^0.46.0"
+"ruamel.yaml" = "^0.17.21"
 
 [tool.poetry.dev-dependencies]
 

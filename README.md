@@ -35,17 +35,29 @@ A cron job is running daily on [GitHub Actions](https://github.com/kichik/docker
 
 ## Requesting More Combos
 
-To add more combos to be built every day, submit a PR with modifications to `.github/workflows/daily.yml`. Add another line under the `combos` matrix with the format:
+To add more combos to be built every day, submit a PR with modifications to `combos.yml`. Add another entry with the format:
 
 ```yaml
-- image1:tag1 image2:tag2
+- images:
+    - image1:tag1
+    - image2:tag2
+  platforms:
+    - platform1
+    - platform2
 ```
 
-So if you wanted to add support for Ruby 2.3 and Node 7 running on Alpine, you'd use:
+So if you wanted to add support for Ruby 2.3 and Node 7 running on Alpine for arm64 and amd64, you'd use:
 
 ```yaml
-- ruby:2.3-alpine node:7-alpine
+- images:
+    - ruby:2.3-alpine
+    - node:7-alpine
+  platforms:
+    - linux/arm64/v8
+    - linux/amd64
 ```
+
+After adding the new combo, you should run generate_workflow.py to regenerate the workflow files.
 
 ### Some PR Rules:
 
@@ -59,3 +71,7 @@ So if you wanted to add support for Ruby 2.3 and Node 7 running on Alpine, you'd
 **Why are you using GitHub Actions instead of Docker Hub to build?**
 
 > GitHub Actions has support for daily builds so we can keep the images up-to-date. Docker Hub requires a branch per build and doesn't support Dynamic `Dockerfile` generation.
+
+**Why do we have to manually regenerate workflows?**
+
+> Unfortunately, the default action runner does not have the ability to access the permissions needed to automatically generate them.
