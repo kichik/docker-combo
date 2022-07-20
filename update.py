@@ -47,7 +47,7 @@ class DockerBuildError(Exception):
 class DockerImage(object):
     def __init__(self, image, platform):
         if '@' in image:
-            self.image, dockerfile_url = image.split('@')
+            self.base_image, dockerfile_url = image.split('@')
             docekrfile_req = requests.get(dockerfile_url)
 
             if docekrfile_req.status_code != 200:
@@ -56,7 +56,7 @@ class DockerImage(object):
             self._dockerfile = docekrfile_req.text
 
         else:
-            self.image = image
+            self.base_image = image
             self._dockerfile = None
 
         self._build_time = None
@@ -64,22 +64,26 @@ class DockerImage(object):
 
     @property
     def user(self):
-        if '/' in self.image:
-            return self.image.split('/')[0]
+        if '/' in self.base_image:
+            return self.base_image.split('/')[0]
 
         return '_'
 
     @property
     def repo(self):
-        return self.image.split(':')[0].split('/')[-1]
+        return self.base_image.split(':')[0].split('/')[-1]
 
     @property
     def tag(self):
-        return self.image.split(':')[1] + "-" + self.platform.replace("/", "_")
+        return self.base_image.split(':')[1] + "-" + self.platform.replace("/", "_")
 
     @property
     def base_tag(self):
-        return self.image.split(':')[1]
+        return self.base_image.split(':')[1]
+
+    @property
+    def image(self):
+        return f'{self.base_image}-{self.tag}'
 
     @property
     def build_time(self):
@@ -87,7 +91,7 @@ class DockerImage(object):
             return self._build_time
 
         
-        logging.info('Getting build time for %s', self.image)
+        logging.info('Getting build time for %s', self.base_image)
 
         user = 'library' if self.user == '_' else self.user
         url = 'https://hub.docker.com/v2/repositories/%s/%s/tags/%s' % (user, self.repo, self.base_tag)
@@ -103,7 +107,7 @@ class DockerImage(object):
 
         # I am lazy so just grabbing the first one
         self._build_time = resp['images'][0]['last_pushed']
-        logging.info('%s was last built on %s', self.image, self._build_time)
+        logging.info('%s was last built on %s', self.base_image, self._build_time)
 
         return self._build_time
 
