@@ -31,8 +31,6 @@ jobs:
           - ruby:2.7 node:14
           - ruby:3 node:16
           - ruby:3 node:14
-          - openjdk:8-jdk@https://raw.githubusercontent.com/docker-library/openjdk/master/8/jdk/buster/Dockerfile node:14 python:3.7 --override-from buildpack-deps:buster
-          - openjdk:11@https://raw.githubusercontent.com/docker-library/openjdk/master/11/jdk/buster/Dockerfile node:14
 
     steps:
       - name: Checkout
