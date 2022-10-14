@@ -194,8 +194,8 @@ def should_rebuild(combo_image, base_images):
 
 
 def combine_image_name_and_tag(images):
-    name = '_'.join(i.image.split(':')[0] for i in images)
-    tag = '_'.join(i.image.split(':')[1] for i in images)
+    name = '_'.join(i.base_image.split(':')[0] for i in images)
+    tag = '_'.join(i.base_image.split(':')[1] for i in images)
 
     return f'combos/{name}:{tag}'
 
@@ -249,7 +249,7 @@ class DockerfileBuilder(object):
                 else:
                     path = copy_to
 
-                self.dockerfile += 'COPY --from=%s %s %s\n' % (image.image, path, path)
+                self.dockerfile += 'COPY --from=%s %s %s\n' % (image.base_image, path, path)
 
             elif line.upper().startswith('CMD ') or line.upper().startswith('ENTRYPOINT '):
                 continue
@@ -281,7 +281,7 @@ def main():
 
     if not args.override_from:
         if not is_compatible_from_lines(images):
-            logging.error('%s do not use the same FROM line', ' and '.join(i.image for i in images))
+            logging.error('%s do not use the same FROM line', ' and '.join(i.base_image for i in images))
 
             return 1
 
@@ -326,11 +326,6 @@ def main():
     tempdir = '/tmp/' + combo_image.repo
     temp_dockerfile = tempdir + '/Dockerfile'
     fileobject = dockerfile.file
-    fileobject.seek(0)
-
-    os.mkdir(tempdir)
-
-    with open(temp_dockerfile, 'wb') as f:
         shutil.copyfileobj(fileobject, f, length=999999)
 
     try:
