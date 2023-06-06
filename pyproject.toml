@@ -7,7 +7,7 @@ authors = ["Amir Szekely <kichik@gmail.com>"]
 [tool.poetry.dependencies]
 python = "^3.7"
 docker = "^6.0.1"
-requests = {extras = ["security"], version = "^2.26.0"}
+requests = {extras = ["security"], version = "^2.31.0"}
 beautifulsoup4 = "^4.10.0"
 Markdown = "^3.3.4"
 
