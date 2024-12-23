@@ -22,7 +22,7 @@ def parse_cmdline():
     def check_docker_tag(value):
         image = value.split('@')[0]
         if image.count(':') != 1 or image[0] == ':' or image[-1] == ':':
-            raise argparse.ArgumentTypeError('%s is an invalid Docker tag' % value)
+            raise argparse.ArgumentTypeError(f'{value} is an invalid Docker tag')
         return value
 
     parser = argparse.ArgumentParser()
@@ -49,7 +49,7 @@ class DockerImage(object):
             self.image, dockerfile_url = image.split('@')
             docekrfile_req = requests.get(dockerfile_url)
             if docekrfile_req.status_code != 200:
-                raise DockerImageError('Error downloading Dockerfile (%s)' % dockerfile_url)
+                raise DockerImageError(f'Error downloading Dockerfile ({dockerfile_url})')
             self._dockerfile = docekrfile_req.text
         else:
             self.image = image
@@ -96,10 +96,10 @@ class DockerImage(object):
         if self.user != '_':
             raise DockerImageError('Unable to pull Dockerfile from non-product image on new hub')
 
-        url = 'https://hub.docker.com/v2/repositories/library/%s' % (self.repo, )
+        url = f'https://hub.docker.com/v2/repositories/library/{self.repo}'
         hub_req = requests.get(url)
         if hub_req.status_code != 200:
-            raise DockerImageError('Error connecting to hub (%s)' % hub_req.text)
+            raise DockerImageError(f'Error connecting to hub ({hub_req.text})')
 
         description = hub_req.json().get('full_description', '')
         description_html = markdown.markdown(description)
@@ -121,12 +121,12 @@ class DockerImage(object):
                                                                                                            '/')
                 docekrfile_req = requests.get(dockerfile_url)
                 if docekrfile_req.status_code != 200:
-                    raise DockerImageError('Error downloading Dockerfile (%s)' % dockerfile_url)
+                    raise DockerImageError(f'Error downloading Dockerfile ({dockerfile_url})')
 
                 self._dockerfile = docekrfile_req.text
                 return docekrfile_req.text
 
-        raise DockerImageError('Unable to find Dockerfile for %s in %s' % (self.tag, url))
+        raise DockerImageError(f'Unable to find Dockerfile for {self.tag} in {url}')
 
 
 def get_from_line(dockerfile):
@@ -215,7 +215,7 @@ class DockerfileBuilder(object):
                 else:
                     path = copy_to
 
-                self.dockerfile += 'COPY --from=%s %s %s\n' % (image.image, path, path)
+                self.dockerfile += f'COPY --from={image.image} {path} {path}\n'
 
             elif line.upper().startswith('CMD ') or line.upper().startswith('ENTRYPOINT '):
                 continue
@@ -286,7 +286,7 @@ def main():
         logging.info('Pushing image...')
 
         docker_client.login(os.getenv('DOCKER_USERNAME'), os.getenv('DOCKER_PASSWORD'))
-        push_stream = docker_client.push('%s/%s' % (combo_image.user, combo_image.repo), combo_image.tag, stream=True)
+        push_stream = docker_client.push(f'{combo_image.user}/{combo_image.repo}', combo_image.tag, stream=True)
         log_stream(push_stream)
 
     return 0
