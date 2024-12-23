@@ -96,7 +96,7 @@ class DockerImage(object):
         if self.user != '_':
             raise DockerImageError('Unable to pull Dockerfile from non-product image on new hub')
 
-        url = 'https://hub.docker.com/api/content/v1/products/images/%s' % (self.repo,)
+        url = 'https://hub.docker.com/v2/repositories/library/%s' % (self.repo, )
         hub_req = requests.get(url)
         if hub_req.status_code != 200:
             raise DockerImageError('Error connecting to hub (%s)' % hub_req.text)
