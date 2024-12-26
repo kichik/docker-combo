@@ -110,6 +110,12 @@ class DockerImage(object):
             if node.parent.name == 'code' and node.parent.parent.name == 'a':
                 dockerfile_url = node.parent.parent.get('href')
 
+            if node.parent.name == 'code' and node.parent.parent.parent.name == 'li':
+                if ul := node.parent.parent.parent.find('ul'):
+                    if li := ul.find('li'):
+                        # get first dockerfile of shared tags
+                        dockerfile_url = li.find('a').get('href')
+
             if node.parent.name == 'code' and node.parent.parent.name == 'li':
                 dockerfile_urls = [a.get('href') for a in node.parent.parent.find_all('a')]
                 dockerfile_urls = [u for u in dockerfile_urls if 'windowsservercore' not in u]
@@ -117,8 +123,8 @@ class DockerImage(object):
                     dockerfile_url = dockerfile_urls[0]
 
             if dockerfile_url:
-                dockerfile_url = dockerfile_url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/',
-                                                                                                           '/')
+                dockerfile_url = dockerfile_url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/')
+                logging.info(f'Downloading {dockerfile_url}')
                 docekrfile_req = requests.get(dockerfile_url)
                 if docekrfile_req.status_code != 200:
                     raise DockerImageError(f'Error downloading Dockerfile ({dockerfile_url})')
