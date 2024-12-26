@@ -17,8 +17,6 @@ jobs:
           - python:3 node:lts
           - python:3 node:20
           - python:3 node:18
-          - python:3.8 node:20
-          - python:3.8 node:18
           - python:3.9 node:20
           - python:3.9 node:18
           - python:3.10 node:20
@@ -41,7 +39,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.8
+          python-version: 3.11
           cache: poetry
 
       - name: Python requirements
