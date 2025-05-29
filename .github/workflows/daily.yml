@@ -15,24 +15,24 @@ jobs:
       matrix:
         combos:
           - python:3 node:lts
+          - python:3 node:24
           - python:3 node:22
           - python:3 node:20
-          - python:3 node:18
+          - python:3.9 node:24
           - python:3.9 node:22
           - python:3.9 node:20
-          - python:3.9 node:18
+          - python:3.10 node:24
           - python:3.10 node:22
           - python:3.10 node:20
-          - python:3.10 node:18
+          - python:3.11 node:24
           - python:3.11 node:22
           - python:3.11 node:20
-          - python:3.11 node:18
+          - python:3.12 node:24
           - python:3.12 node:22
           - python:3.12 node:20
-          - python:3.12 node:18
+          - ruby:3 node:24
           - ruby:3 node:22
           - ruby:3 node:20
-          - ruby:3 node:18
 
     steps:
       - name: Checkout
