@@ -227,7 +227,7 @@ class DockerfileBuilder(object):
                 continue
 
             elif line.upper().startswith('ENV '):
-                _, name, value = re.split('[ \t]+', line, 2)
+                _, name, value = re.split('[ \t=]+', line, 2)
                 if name in self._env_overrides:
                     self.dockerfile += f'ENV {name} {self._env_overrides[name]}\n'
                 else:
