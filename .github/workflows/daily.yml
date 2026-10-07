@@ -30,9 +30,6 @@ jobs:
           - python:3.14 node:26
           - python:3.14 node:24
           - python:3.14 node:22
-          - python:3.15 node:26
-          - python:3.15 node:24
-          - python:3.15 node:22
           - ruby:3 node:26
           - ruby:3 node:24
           - ruby:3 node:22
